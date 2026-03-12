@@ -1,0 +1,17 @@
+# Upstream clones (populated by fetch scripts; do not track)
+upstream/VistA-M/
+upstream/VistA/
+upstream/VistA-VEHU-M/
+
+# Build and verification outputs (do not track)
+artifacts/
+
+# locks/ is tracked; locks/worldvista-sources.lock.json is canonical metadata
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
