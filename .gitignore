@@ -19,3 +19,9 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# MkDocs build output
+site/
+
+# Notion sync config (contains credentials)
+notion-sync-config.json

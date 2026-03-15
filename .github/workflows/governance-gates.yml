@@ -1,0 +1,33 @@
+name: Governance Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check doc roots
+        run: bash scripts/governance/check-doc-roots.sh
+
+      - name: Check ADR index
+        run: bash scripts/governance/check-adr-index.sh
+
+      - name: Check SOT files
+        run: bash scripts/governance/check-sot-files.sh
+
+      - name: Check artifacts placement
+        run: bash scripts/governance/check-artifacts-placement.sh
+
+      - name: Check ports
+        run: bash scripts/governance/check-ports.sh
+
+      - name: Build MkDocs
+        run: |
+          pip install mkdocs-material
+          python -m mkdocs build --strict

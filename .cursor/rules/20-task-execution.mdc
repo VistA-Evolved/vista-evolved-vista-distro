@@ -1,0 +1,26 @@
+---
+description: Task execution discipline for VistA Evolved Distro
+globs:
+alwaysApply: true
+---
+
+# Task execution discipline
+
+Every AI task response MUST include a Task Report:
+
+- **Objective:** what was requested
+- **Files inspected:** list
+- **Files changed:** list
+- **Commands run:** list with outputs
+- **Results:** pass/fail per step
+- **Verified truth:** what was proven
+- **Unverified areas:** what remains unproven
+- **Risks:** known risks
+- **Next step:** what comes next
+
+## Rules
+
+- Do not skip verification. Do not say "should work."
+- Evidence goes in `/artifacts`, not `/docs`.
+- Verify against the live Docker container when possible.
+- Stop after each slice and wait for human review.

@@ -1,0 +1,23 @@
+# Code owners — VistA Evolved Distro
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Governance (root-level instruction files)
+/AGENTS.md               @vista-evolved/distro
+/CLAUDE.md               @vista-evolved/distro
+/.github/                @vista-evolved/distro
+/.cursor/                @vista-evolved/distro
+/mkdocs.yml              @vista-evolved/distro
+
+# Upstream and overlay
+/upstream/               @vista-evolved/distro
+/overlay/                @vista-evolved/distro
+/locks/                  @vista-evolved/distro
+
+# Docker build lanes
+/docker/                 @vista-evolved/distro
+
+# Scripts
+/scripts/                @vista-evolved/distro
+
+# Documentation
+/docs/                   @vista-evolved/distro

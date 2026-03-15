@@ -1,0 +1,25 @@
+---
+description: Core governance rules for VistA Evolved Distro
+globs:
+alwaysApply: true
+---
+
+# Core governance — VistA Evolved Distro
+
+Read `/AGENTS.md` first. It is the root law.
+
+## Non-negotiable
+
+1. **One slice at a time.** Verify before next slice.
+2. **No claiming done without proof.** Proof = files changed + commands run + outputs + pass/fail.
+3. **Upstream is read-only.** Never modify files under `upstream/`. All customizations in `overlay/`.
+4. **Runtime truth over assumptions.** Verify against the live Docker container.
+5. **No silent mocks or stubs.** Return explicit `integration-pending` state.
+6. **Stop and report after each slice.** Do not proceed until instructed.
+
+## Key references
+
+- Source of truth: `docs/reference/source-of-truth-index.md`
+- Upstream strategy: `docs/reference/upstream-source-strategy.md`
+- Runtime truth: `docs/reference/runtime-truth.md`
+- Decision index: `docs/reference/decision-index.yaml`

@@ -1,0 +1,29 @@
+---
+description: Documentation governance for VistA Evolved Distro
+globs:
+  - docs/**
+alwaysApply: false
+---
+
+# Documentation governance
+
+## Approved categories under /docs
+
+1. **tutorials/** — Step-by-step learning paths
+2. **how-to/** — Task-oriented guides
+3. **reference/** — Technical references (policies, registries, indexes)
+4. **explanation/** — Architecture rationale, governance
+5. **adrs/** — Architecture decision records (enterprise-namespaced VE-DISTRO-ADR-NNNN)
+6. **runbooks/** — Operational procedures
+
+## Forbidden
+
+- `/reports`, `/docs/reports`, random audit folders
+- Evidence in `/docs` (use `/artifacts`)
+- Duplicate summaries or ad-hoc scratch docs
+
+## Rules
+
+- Every ADR must be registered in `docs/reference/decision-index.yaml`
+- ADR IDs use enterprise namespace: `VE-DISTRO-ADR-NNNN`
+- See `docs/reference/doc-governance.md` for full rules

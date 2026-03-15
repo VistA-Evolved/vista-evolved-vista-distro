@@ -1,0 +1,62 @@
+site_name: VistA Evolved Distro
+site_description: Upstream fetch/pin, overlay, and local VistA runtime documentation
+repo_url: https://github.com/moulton-kevin/vista-evolved-vista-distro
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: teal
+      accent: amber
+  features:
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - tables
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Tutorials:
+    - tutorials/index.md
+  - How-to:
+    - how-to/index.md
+  - Reference:
+    - reference/index.md
+    - Source of Truth Index: reference/source-of-truth-index.md
+    - Doc Governance: reference/doc-governance.md
+    - Decision Index: reference/decision-index.yaml
+    - Upstream Source Strategy: reference/upstream-source-strategy.md
+    - Runtime Truth: reference/runtime-truth.md
+    - Runtime Readiness Levels: reference/runtime-readiness-levels.md
+    - Runtime Proof Policy: reference/runtime-proof-policy.md
+    - Runtime Truth Governance: reference/runtime-truth-governance.md
+    - Customization Policy: reference/customization-policy.md
+    - Port Registry: reference/port-registry.md
+  - Explanation:
+    - explanation/index.md
+    - Governed Build Protocol: explanation/governed-build-protocol.md
+  - ADRs:
+    - adrs/index.md
+    - ADR-0001 Upstream Overlay: adrs/ADR-0001-upstream-overlay-policy.md
+    - ADR-0002 Local-Source Builds: adrs/ADR-0002-local-source-first-builds.md
+    - ADR-0003 UTF-8 Primary Lane: adrs/ADR-0003-utf8-primary-lane.md
+  - Runbooks:
+    - runbooks/index.md
+    - Browser Terminal Proof: runbooks/browser-terminal-proof.md
+    - Distro Normalization: runbooks/distro-normalization-report.md
+    - First Fetch: runbooks/first-fetch-runbook.md
+    - Language Pack Foundation: runbooks/language-pack-foundation.md
+    - Multilingual Architecture: runbooks/multilingual-architecture-inventory.md
+    - Phase 2 Terminal Proof: runbooks/phase2-terminal-proof-report.md
+    - Phase 3 UTF-8 Build: runbooks/phase3-utf8-build-lane.md
+    - Terminal Operator Quickstart: runbooks/terminal-operator-quickstart.md
+    - Terminal Proof Checklist: runbooks/terminal-proof-checklist.md

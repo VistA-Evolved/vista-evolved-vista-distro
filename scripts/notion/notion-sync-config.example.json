@@ -1,0 +1,12 @@
+{
+  "token": "",
+  "targetDatabaseId": "",
+  "approvedDocs": [
+    "docs/reference/source-of-truth-index.md",
+    "docs/reference/runtime-truth.md",
+    "docs/reference/upstream-source-strategy.md",
+    "docs/explanation/governed-build-protocol.md"
+  ],
+  "syncDirection": "repo-to-notion",
+  "notes": "Repo is canonical. Notion is mirror only. See scripts/notion/README.md."
+}

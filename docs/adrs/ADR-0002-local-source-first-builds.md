@@ -1,5 +1,7 @@
 # ADR-0002: Local-source-first builds
 
+> **Enterprise ID:** VE-DISTRO-ADR-0002
+
 ## Status
 
 Accepted.
