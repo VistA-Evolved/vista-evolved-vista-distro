@@ -1,0 +1,45 @@
+# =============================================================================
+# vista-evolved-vista-distro -- Local VistA Docker Compose (UTF-8 lane)
+# =============================================================================
+# Run from repo root:
+#   docker compose -f docker/local-vista-utf8/docker-compose.yml up -d
+#
+# Or from this directory:
+#   docker compose up -d
+# =============================================================================
+
+services:
+  local-vista-utf8:
+    build:
+      context: ../../
+      dockerfile: docker/local-vista-utf8/Dockerfile
+    image: vista-distro:local-utf8
+    container_name: local-vista-utf8
+    hostname: local-vista-utf8
+    ports:
+      - "9434:9430"
+      - "2226:22"
+    environment:
+      - VISTA_ADMIN_ACCESS=${VISTA_ADMIN_ACCESS:-PRO1234}
+      - VISTA_ADMIN_VERIFY=${VISTA_ADMIN_VERIFY:-PRO1234!!}
+      - VISTA_BROKER_PORT=9430
+      - VISTA_SSH_ENABLED=true
+      - VISTA_TASKMAN_ENABLED=true
+      - VISTA_SYSID=LOCAL-VISTA-UTF8
+      - VISTA_SITE_LANG=${VISTA_SITE_LANG:-}
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      - ydb_chset=UTF-8
+    volumes:
+      - vista-data-utf8:/opt/vista/g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/opt/vista/health-check.sh"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      retries: 3
+
+volumes:
+  vista-data-utf8:
+    driver: local

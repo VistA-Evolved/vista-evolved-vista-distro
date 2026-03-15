@@ -1,0 +1,50 @@
+{
+  "description": "Lock metadata for upstream WorldVistA sources. Tracked in git. See scripts/fetch/worldvista-sources.config.json for source definitions.",
+  "generatedAt": "2025-07-13T00:00:00Z",
+  "sourceType": "local_snapshot_import",
+  "reason": "Sources imported from locally downloaded ZIP archives. No git metadata available. GitHub clones failed due to repo size (~13GB total).",
+  "sources": [
+    {
+      "name": "VistA-M",
+      "url": "https://github.com/WorldVistA/VistA-M.git",
+      "localPath": "upstream/VistA-M",
+      "branch": "master",
+      "commitSha": null,
+      "fetchDate": null,
+      "importDate": "2025-07-12",
+      "importMethod": "zip_download_then_robocopy",
+      "note": "36,878 files, ~6.1 GB. No .git directory present."
+    },
+    {
+      "name": "VistA",
+      "url": "https://github.com/WorldVistA/VistA.git",
+      "localPath": "upstream/VistA",
+      "branch": "master",
+      "commitSha": null,
+      "fetchDate": null,
+      "importDate": "2025-07-12",
+      "importMethod": "zip_download_then_robocopy",
+      "note": "12,556 files, ~340 MB. No .git directory present."
+    },
+    {
+      "name": "VistA-VEHU-M",
+      "url": "https://github.com/WorldVistA/VistA-VEHU-M.git",
+      "localPath": "upstream/VistA-VEHU-M",
+      "branch": "master",
+      "commitSha": null,
+      "fetchDate": null,
+      "importDate": "2025-07-12",
+      "importMethod": "zip_download_then_robocopy",
+      "note": "42,460 files, ~6.9 GB. Optional VEHU demo dataset. Not used in current Docker build.",
+      "optional": true
+    }
+  ],
+  "dockerBuild": {
+    "image": "vista-distro:local",
+    "builtFrom": "upstream/VistA-M (Packages directory only)",
+    "routinesLoaded": 33951,
+    "globalsLoaded": 2922,
+    "loadErrors": 0,
+    "builtDate": "2025-07-12"
+  }
+}

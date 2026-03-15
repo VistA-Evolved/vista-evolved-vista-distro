@@ -17,8 +17,18 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Split-Path -Parent $MyInvocation.MyCommand.Path) }
-if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path }
+
+# --- Invocation-agnostic path resolution (works from any cwd, any invocation style) ---
+$_ScriptPath = if ($PSCommandPath) {
+  $PSCommandPath
+} elseif ($MyInvocation.MyCommand.Path) {
+  $MyInvocation.MyCommand.Path
+} else {
+  throw "Unable to determine script path. Run via & or powershell.exe -File."
+}
+$scriptDir = Split-Path -Parent $_ScriptPath
+$_derivedRepoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
+if (-not $RepoRoot) { $RepoRoot = $_derivedRepoRoot }
 if (-not [System.IO.Path]::IsPathRooted($RepoRoot)) { $RepoRoot = (Resolve-Path $RepoRoot).Path }
 $LockPath = Join-Path $RepoRoot "locks\worldvista-sources.lock.json"
 $UpstreamPath = Join-Path $RepoRoot "upstream"

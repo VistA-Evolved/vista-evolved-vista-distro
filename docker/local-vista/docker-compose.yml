@@ -1,0 +1,39 @@
+# =============================================================================
+# vista-evolved-vista-distro -- Local VistA Docker Compose
+# =============================================================================
+# Run from repo root:
+#   docker compose -f docker/local-vista/docker-compose.yml up -d
+#
+# Or from this directory:
+#   docker compose up -d
+# =============================================================================
+
+services:
+  local-vista:
+    build:
+      context: ../../
+      dockerfile: docker/local-vista/Dockerfile
+    image: vista-distro:local
+    container_name: local-vista
+    hostname: local-vista
+    ports:
+      - "9433:9430"   # RPC Broker (avoids conflict with wv:9430, VEHU:9431, distro:9432)
+      - "2225:22"      # SSH terminal access (avoids conflict with wv:2222, VEHU:2223)
+    environment:
+      - VISTA_ADMIN_ACCESS=${VISTA_ADMIN_ACCESS:-PRO1234}
+      - VISTA_ADMIN_VERIFY=${VISTA_ADMIN_VERIFY:-PRO1234!!}
+      - VISTA_BROKER_PORT=9430
+      - VISTA_SSH_ENABLED=true
+    volumes:
+      - vista-data:/opt/vista/g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/opt/vista/health-check.sh"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      retries: 3
+
+volumes:
+  vista-data:
+    driver: local

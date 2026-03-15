@@ -1,0 +1,45 @@
+{
+  "packVersion": "1.0.0",
+  "language": {
+    "name": "KOREAN",
+    "iso2": "ko",
+    "iso3": "kor",
+    "ien": 198
+  },
+  "level": 3,
+  "coverage": {
+    "formatting": {
+      "DD": true,
+      "FMTE": true,
+      "CRD": false,
+      "LC": false,
+      "UC": false,
+      "ORD": false,
+      "TIME": false,
+      "20.2": true
+    },
+    "dialogs": {
+      "total": 34,
+      "categories": {
+        "yesno": 4,
+        "menuPrompts": 20,
+        "signOn": 2,
+        "coverSheet": 8
+      }
+    },
+    "menus": {
+      "translated": 15,
+      "scope": "EVE (Systems Manager Menu) tree — 14 child items + parent",
+      "routine": "ZVEKOMEN",
+      "rollback": "D RESTORE^ZVEKOMEN",
+      "candidate": true,
+      "pipeline": "TRAMENU^UKOP6TRA"
+    }
+  },
+  "source": "Plan VI (Sam Habiel 2018-2019), extracted from VEHU snapshot",
+  "extractedFrom": "local-vista-utf8 container, 2025-07-14, auto-exported via ZVEEXPT",
+  "requires": {
+    "ydbChset": "UTF-8",
+    "routines": ["UKOUTL", "ZVEKOMEN"]
+  }
+}

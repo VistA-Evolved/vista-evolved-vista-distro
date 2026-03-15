@@ -1,0 +1,29 @@
+# .dockerignore for local VistA Docker build
+# Build context: repo root
+
+# Git metadata
+.git
+.gitignore
+
+# Documentation / process
+*.md
+docs/
+prompts/
+migrated-process-assets/
+artifacts/
+locks/
+
+# Scripts (not needed in image)
+scripts/
+
+# Large upstream dirs not needed for the VistA-M build
+upstream/VistA/
+upstream/VistA-VEHU-M/
+upstream/VistA-M/
+
+# Temp / OS files
+*.log
+*.swp
+*~
+.DS_Store
+Thumbs.db

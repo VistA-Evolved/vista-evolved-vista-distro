@@ -16,17 +16,28 @@
 [CmdletBinding()]
 param(
   [string]$RepoRoot,
-  [string]$ConfigPath = (Join-Path $PSScriptRoot "worldvista-sources.config.json"),
+  [string]$ConfigPath,
   [switch]$NoUpdate,
   [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
-$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Split-Path -Parent $MyInvocation.MyCommand.Path) }
-if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path }
+
+# --- Invocation-agnostic path resolution (works from any cwd, any invocation style) ---
+$_ScriptPath = if ($PSCommandPath) {
+  $PSCommandPath
+} elseif ($MyInvocation.MyCommand.Path) {
+  $MyInvocation.MyCommand.Path
+} else {
+  throw "Unable to determine script path. Run via & or powershell.exe -File."
+}
+$scriptDir = Split-Path -Parent $_ScriptPath
+$_derivedRepoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
+if (-not $RepoRoot) { $RepoRoot = $_derivedRepoRoot }
 if (-not [System.IO.Path]::IsPathRooted($RepoRoot)) { $RepoRoot = (Resolve-Path $RepoRoot).Path }
 $script:RepoRoot = $RepoRoot
-$script:ConfigPath = if ([System.IO.Path]::IsPathRooted($ConfigPath)) { $ConfigPath } else { (Join-Path $script:RepoRoot (Join-Path "scripts" (Join-Path "fetch" (Split-Path -Leaf $ConfigPath)))) }
+if (-not $ConfigPath) { $ConfigPath = Join-Path $scriptDir "worldvista-sources.config.json" }
+$script:ConfigPath = if ([System.IO.Path]::IsPathRooted($ConfigPath)) { $ConfigPath } else { Join-Path $script:RepoRoot $ConfigPath }
 $script:LockPath = Join-Path $script:RepoRoot "locks\worldvista-sources.lock.json"
 
 function Write-Log { param([string]$Message) Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $Message" }
@@ -40,11 +51,23 @@ function Test-GitAvailable {
 }
 
 function Get-RepoState {
-  param([string]$LocalPath)
+  param([string]$LocalPath, [string]$ExpectedUrl)
   $absPath = Join-Path $RepoRoot $LocalPath
   if (-not (Test-Path -LiteralPath $absPath)) { return "missing" }
   $gitDir = Join-Path $absPath ".git"
   if (-not (Test-Path -LiteralPath $gitDir)) { return "not-repo" }
+  # Check if origin remote matches the expected URL
+  $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+  Push-Location $absPath
+  try {
+    $originUrl = & git remote get-url origin 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $originUrl) {
+      return "no-remote"
+    }
+    if ($ExpectedUrl -and $originUrl.Trim() -ne $ExpectedUrl) {
+      return "wrong-remote"
+    }
+  } finally { Pop-Location; $ErrorActionPreference = $prevEAP }
   return "present"
 }
 
@@ -58,11 +81,16 @@ function Invoke-Clone {
   }
   Write-Log "Cloning $Url -> $LocalPath (branch: $Branch)"
   Push-Location $RepoRoot
+  # git writes progress to stderr; temporarily allow non-terminating errors
+  $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
   try {
     & git clone --branch $Branch --single-branch --depth 1 $Url $LocalPath 2>&1 | ForEach-Object { Write-Log $_ }
-    if ($LASTEXITCODE -ne 0) { throw "git clone exited with $LASTEXITCODE" }
+    $cloneExit = $LASTEXITCODE
+    $ErrorActionPreference = $prevEAP
+    if ($cloneExit -ne 0) { throw "git clone exited with $cloneExit" }
   } finally {
     Pop-Location
+    $ErrorActionPreference = $prevEAP
   }
   Write-Log "Cloned: $LocalPath"
 }
@@ -71,19 +99,27 @@ function Invoke-Fetch {
   param([string]$LocalPath, [switch]$HardReset)
   $absPath = Join-Path $RepoRoot $LocalPath
   Push-Location $absPath
+  # git writes progress to stderr; temporarily allow non-terminating errors
+  $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
   try {
     Write-Log "Fetching $LocalPath"
     & git fetch origin 2>&1 | ForEach-Object { Write-Log $_ }
-    if ($LASTEXITCODE -ne 0) { throw "git fetch exited with $LASTEXITCODE" }
+    $fetchExit = $LASTEXITCODE
+    $ErrorActionPreference = $prevEAP
+    if ($fetchExit -ne 0) { throw "git fetch exited with $fetchExit" }
     if ($HardReset) {
-      $branch = & git rev-parse --abbrev-ref HEAD 2>&1
+      $branch = & git rev-parse --abbrev-ref HEAD 2>$null
       if ($LASTEXITCODE -ne 0) { throw "git rev-parse failed" }
       Write-Log "Hard reset $LocalPath to origin/$branch"
+      $ErrorActionPreference = "Continue"
       & git reset --hard "origin/$branch" 2>&1 | ForEach-Object { Write-Log $_ }
-      if ($LASTEXITCODE -ne 0) { throw "git reset exited with $LASTEXITCODE" }
+      $resetExit = $LASTEXITCODE
+      $ErrorActionPreference = $prevEAP
+      if ($resetExit -ne 0) { throw "git reset exited with $resetExit" }
     }
   } finally {
     Pop-Location
+    $ErrorActionPreference = $prevEAP
   }
 }
 
@@ -184,9 +220,14 @@ foreach ($s in $sources) {
     Write-Log "Skipping optional repo: $($s.name) (vehuEnabled=false)"
     continue
   }
-  $state = Get-RepoState -LocalPath $s.localPath
+  $state = Get-RepoState -LocalPath $s.localPath -ExpectedUrl $s.url
   try {
     if ($state -eq "missing") {
+      Invoke-Clone -Url $s.url -LocalPath $s.localPath -Branch $s.branch
+    } elseif ($state -in @("no-remote","wrong-remote")) {
+      $absPath = Join-Path $RepoRoot $s.localPath
+      Write-Log "Removing stale/stub repo at $($s.localPath) (state=$state), will re-clone."
+      Remove-Item -LiteralPath $absPath -Recurse -Force
       Invoke-Clone -Url $s.url -LocalPath $s.localPath -Branch $s.branch
     } elseif ($state -eq "present" -and $cfg.allowUpdates -and -not $NoUpdate) {
       Invoke-Fetch -LocalPath $s.localPath -HardReset:$s.hardReset

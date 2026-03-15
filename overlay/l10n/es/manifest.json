@@ -1,0 +1,41 @@
+{
+  "packVersion": "1.1.0",
+  "language": {
+    "name": "SPANISH",
+    "iso2": "es",
+    "iso3": "spa",
+    "ien": 3
+  },
+  "level": 2,
+  "coverage": {
+    "formatting": {
+      "DD": true,
+      "FMTE": true,
+      "CRD": true,
+      "LC": true,
+      "UC": true,
+      "ORD": true,
+      "TIME": true
+    },
+    "dialogs": {
+      "total": 26,
+      "categories": {
+        "yesno": 4,
+        "menuPrompts": 20,
+        "signOn": 2
+      }
+    },
+    "menus": {
+      "translated": 0,
+      "candidate": true,
+      "pipeline": "TRAMENU^UKOP6TRA"
+    }
+  },
+  "source": "Human-reviewed translations (2025-07-14). Formatting from Plan VI.",
+  "status": "live-proven",
+  "liveProofDate": "2025-07-14",
+  "requires": {
+    "ydbChset": "UTF-8",
+    "routines": ["ZVEESDLG"]
+  }
+}

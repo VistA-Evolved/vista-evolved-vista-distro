@@ -8,4 +8,4 @@
 - **Pin:** `scripts/pin/pin-worldvista-sources.ps1` — record current or given SHAs in lock. Use `-ValidateOnly` to validate paths and config only.
 - **Status:** `scripts/fetch/show-worldvista-source-status.ps1` — read lock and optionally list `upstream/` contents.
 - **Overlay** (routines, install, patches) is applied on top of upstream. All customizations live in `overlay/`; upstream remains pristine.
-- Do not fetch in bootstrap stage. When ready, run fetch then pin; lock file is the contract for reproducible builds.
+- Do not fetch upstream via git in bootstrap stage. Sources were imported from locally downloaded ZIP archives (2025-07-12) due to repo size (~13GB). Lock file records import metadata. When git-based fetch is needed, run fetch then pin; lock file is the contract for reproducible builds.

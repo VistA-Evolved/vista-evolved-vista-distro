@@ -10,6 +10,6 @@ Five levels of readiness for the local VistA Docker lane. Each level has a clear
 | **TERMINAL_READY** | SSH port accepts connection | TCP to SSH port |
 | **RPC_READY** | RPC broker port accepts connection | TCP to RPC port |
 
-Default ports: RPC 9432, SSH 2224. Override with `LOCAL_VISTA_PORT` and `LOCAL_VISTA_SSH_PORT` or script parameters.
+Default ports: RPC 9433, SSH 2225. Override with `LOCAL_VISTA_PORT` and `LOCAL_VISTA_SSH_PORT` or script parameters.
 
 **Script:** `scripts/verify/healthcheck-local-vista.ps1` — runs all five levels and exits 0 only if all pass. Use `-ValidatePathsOnly` to verify script paths without calling Docker.

@@ -1,0 +1,26 @@
+# Git metadata
+.git
+.gitignore
+
+# Documentation
+*.md
+!overlay/routines/*.m
+
+# Build/CI artifacts
+artifacts/
+locks/
+scripts/
+docs/
+prompts/
+migrated-process-assets/
+
+# Upstream sources we don't need in the image
+upstream/VistA/
+upstream/VistA-VEHU-M/
+
+# Temp / OS files
+*.log
+*.swp
+*~
+.DS_Store
+Thumbs.db

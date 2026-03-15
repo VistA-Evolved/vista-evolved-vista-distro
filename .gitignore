@@ -2,6 +2,10 @@
 upstream/VistA-M/
 upstream/VistA/
 upstream/VistA-VEHU-M/
+upstream/VistA-VEHU-M-plan-vi/
+
+# Temp files
+.tmp-*
 
 # Build and verification outputs (do not track)
 artifacts/

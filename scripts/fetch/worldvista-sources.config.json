@@ -28,6 +28,15 @@
       "branch": "master",
       "hardReset": false,
       "optional": true
+    },
+    {
+      "name": "VistA-VEHU-M-plan-vi",
+      "purpose": "Optional: upstream VEHU Plan VI UTF-8 source lane used by WorldVistA UTF-8 Docker builds",
+      "url": "https://github.com/WorldVistA/VistA-VEHU-M.git",
+      "localPath": "upstream/VistA-VEHU-M-plan-vi",
+      "branch": "plan-vi",
+      "hardReset": false,
+      "optional": true
     }
   ]
 }

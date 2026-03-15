@@ -1,28 +1,27 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Run all readiness levels for the local-vista lane and output pass/fail. No guessing.
+  Run all readiness levels for the local-vista-utf8 lane and output pass/fail.
 .DESCRIPTION
   Levels: CONTAINER_STARTED, NETWORK_REACHABLE, SERVICE_READY, TERMINAL_READY, RPC_READY.
-  Uses canonical ports 9433 (RPC) and 2225 (SSH) unless overridden by env or parameters.
-  -ValidatePathsOnly: print canonical paths and assumptions only; do not call Docker. Use to verify script resolves repo and paths correctly.
+  Uses canonical ports 9434 (RPC) and 2226 (SSH) unless overridden by env or parameters.
+  -ValidatePathsOnly: print canonical paths and assumptions only; do not call Docker.
 .EXAMPLE
-  .\healthcheck-local-vista.ps1 -ValidatePathsOnly
+  .\healthcheck-local-vista-utf8.ps1 -ValidatePathsOnly
 .EXAMPLE
-  .\.\healthcheck-local-vista.ps1 -HostPortRpc 9433 -HostPortSsh 2225
+  .\healthcheck-local-vista-utf8.ps1 -HostPortRpc 9434 -HostPortSsh 2226
 #>
 [CmdletBinding()]
 param(
-  [string]$HostPortRpc = $(if ($env:LOCAL_VISTA_PORT) { [int]$env:LOCAL_VISTA_PORT } else { 9433 }),
-  [string]$HostPortSsh = $(if ($env:LOCAL_VISTA_SSH_PORT) { [int]$env:LOCAL_VISTA_SSH_PORT } else { 2225 }),
-  [string]$ContainerName = "local-vista",
+  [string]$HostPortRpc = $(if ($env:LOCAL_VISTA_UTF8_PORT) { [int]$env:LOCAL_VISTA_UTF8_PORT } else { 9434 }),
+  [string]$HostPortSsh = $(if ($env:LOCAL_VISTA_UTF8_SSH_PORT) { [int]$env:LOCAL_VISTA_UTF8_SSH_PORT } else { 2226 }),
+  [string]$ContainerName = "local-vista-utf8",
   [int]$TcpTimeoutMs = 3000,
   [switch]$ValidatePathsOnly
 )
 
 $ErrorActionPreference = "Stop"
 
-# --- Invocation-agnostic path resolution (works from any cwd, any invocation style) ---
 $_ScriptPath = if ($PSCommandPath) {
   $PSCommandPath
 } elseif ($MyInvocation.MyCommand.Path) {
@@ -33,9 +32,8 @@ $_ScriptPath = if ($PSCommandPath) {
 $_ScriptDir = Split-Path -Parent $_ScriptPath
 $script:RepoRoot = (Resolve-Path (Join-Path $_ScriptDir "..\..")).Path
 
-# --- ValidatePathsOnly ---
 if ($ValidatePathsOnly) {
-  Write-Host "`n=== healthcheck-local-vista.ps1 (ValidatePathsOnly) ===" -ForegroundColor Cyan
+  Write-Host "`n=== healthcheck-local-vista-utf8.ps1 (ValidatePathsOnly) ===" -ForegroundColor Cyan
   Write-Host "  Repo root:       $script:RepoRoot"
   Write-Host "  Script dir:      $_ScriptDir"
   Write-Host "  Container name:  $ContainerName"
@@ -79,29 +77,23 @@ function Write-Level {
   Write-Host $line -ForegroundColor $color
 }
 
-Write-Host "`n=== Local Vista readiness check ===" -ForegroundColor Cyan
+Write-Host "`n=== Local Vista UTF-8 readiness check ===" -ForegroundColor Cyan
 Write-Host "  RPC port: $HostPortRpc  SSH port: $HostPortSsh  Container: $ContainerName`n"
 
-# 1. CONTAINER_STARTED
 $status = docker ps -a --filter "name=$ContainerName" --format "{{.Status}}" 2>&1
 $containerUp = $status -match "^Up"
 Write-Level -Level "CONTAINER_STARTED" -Pass $containerUp -Detail $(if ($status) { $status.Trim() } else { "container not found" })
 
-# 2. NETWORK_REACHABLE (both ports from host)
 $rpcReach = Test-TcpPort -HostAddr "127.0.0.1" -Port $HostPortRpc -TimeoutMs $TcpTimeoutMs
 $sshReach = Test-TcpPort -HostAddr "127.0.0.1" -Port $HostPortSsh -TimeoutMs $TcpTimeoutMs
 Write-Level -Level "NETWORK_REACHABLE" -Pass ($rpcReach -and $sshReach) -Detail "RPC=$rpcReach SSH=$sshReach"
 
-# 3. SERVICE_READY (Docker health; use conditional format so missing Health does not error)
 $health = docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' $ContainerName 2>$null
 if ($LASTEXITCODE -ne 0) { $health = "none" }
 $healthOk = $health -eq "healthy"
 Write-Level -Level "SERVICE_READY" -Pass $healthOk -Detail $(if ($health -and $health -ne "none") { $health.Trim() } else { "no health status" })
 
-# 4. TERMINAL_READY (SSH port)
 Write-Level -Level "TERMINAL_READY" -Pass $sshReach -Detail "TCP 127.0.0.1:$HostPortSsh"
-
-# 5. RPC_READY (broker port)
 Write-Level -Level "RPC_READY" -Pass $rpcReach -Detail "TCP 127.0.0.1:$HostPortRpc"
 
 Write-Host ""
