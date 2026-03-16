@@ -4,6 +4,9 @@
 
 Read `/AGENTS.md` before any task. It is the canonical cross-tool governance file.
 
+> **Multi-root workspace:** `/AGENTS.md` means this repo's AGENTS.md, not a sibling repo's.
+> The archive repo's AGENTS.md is reference material only — it does not govern this repo.
+
 ## Key rules
 
 1. **Upstream is read-only.** Never modify files under `upstream/`. All customizations go in `overlay/`.

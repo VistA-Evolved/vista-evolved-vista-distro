@@ -1,6 +1,10 @@
 # Source of Truth Index — VistA Evolved Distro
 
 > Master index of what governs what. When in doubt, this file resolves it.
+>
+> **Multi-root workspace:** When this file references `/AGENTS.md`, it means this repo's
+> AGENTS.md. Each repo in the workspace is self-governing. Sibling repos
+> (`VistA-Evolved` archive, `vista-evolved-platform`) have their own governance files.
 
 ---
 
@@ -38,9 +42,9 @@
 | What | Canonical location | Notes |
 |------|-------------------|-------|
 | Decision index | `docs/reference/decision-index.yaml` | Enterprise-namespaced ADR registry |
-| ADR-0001 Upstream overlay | `docs/adrs/ADR-0001-upstream-overlay-policy.md` | VE-DISTRO-ADR-0001 |
-| ADR-0002 Local-source builds | `docs/adrs/ADR-0002-local-source-first-builds.md` | VE-DISTRO-ADR-0002 |
-| ADR-0003 UTF-8 primary lane | `docs/adrs/ADR-0003-utf8-primary-lane.md` | VE-DISTRO-ADR-0003 |
+| ADR-0001 Upstream overlay | `docs/adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md` | VE-DISTRO-ADR-0001 |
+| ADR-0002 Local-source builds | `docs/adrs/VE-DISTRO-ADR-0002-local-source-first-builds.md` | VE-DISTRO-ADR-0002 |
+| ADR-0003 UTF-8 primary lane | `docs/adrs/VE-DISTRO-ADR-0003-utf8-primary-lane.md` | VE-DISTRO-ADR-0003 |
 
 ---
 

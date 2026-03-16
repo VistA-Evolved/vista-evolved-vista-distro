@@ -1,6 +1,6 @@
-# ADR-0001: Upstream-overlay policy
+# VE-DISTRO-ADR-0001: Upstream-overlay policy
 
-> **Enterprise ID:** VE-DISTRO-ADR-0001
+> **Legacy ID:** ADR-0001 (compatibility reference only)
 
 ## Status
 

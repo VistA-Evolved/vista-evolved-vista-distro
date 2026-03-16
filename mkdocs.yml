@@ -1,6 +1,6 @@
 site_name: VistA Evolved Distro
 site_description: Upstream fetch/pin, overlay, and local VistA runtime documentation
-repo_url: https://github.com/moulton-kevin/vista-evolved-vista-distro
+repo_url: https://github.com/VistA-Evolved/vista-evolved-vista-distro
 
 theme:
   name: material
@@ -46,9 +46,9 @@ nav:
     - Governed Build Protocol: explanation/governed-build-protocol.md
   - ADRs:
     - adrs/index.md
-    - ADR-0001 Upstream Overlay: adrs/ADR-0001-upstream-overlay-policy.md
-    - ADR-0002 Local-Source Builds: adrs/ADR-0002-local-source-first-builds.md
-    - ADR-0003 UTF-8 Primary Lane: adrs/ADR-0003-utf8-primary-lane.md
+    - "VE-DISTRO-ADR-0001: Upstream Overlay": adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md
+    - "VE-DISTRO-ADR-0002: Local-Source Builds": adrs/VE-DISTRO-ADR-0002-local-source-first-builds.md
+    - "VE-DISTRO-ADR-0003: UTF-8 Primary Lane": adrs/VE-DISTRO-ADR-0003-utf8-primary-lane.md
   - Runbooks:
     - runbooks/index.md
     - Browser Terminal Proof: runbooks/browser-terminal-proof.md

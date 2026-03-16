@@ -8,5 +8,8 @@ All ADRs must be registered in [decision-index.yaml](../reference/decision-index
 
 ## Records
 
-- [ADR-0001: Upstream-overlay policy](ADR-0001-upstream-overlay-policy.md) — VE-DISTRO-ADR-0001
-- [ADR-0002: Local-source-first builds](ADR-0002-local-source-first-builds.md) — VE-DISTRO-ADR-0002
+| ID | Title | Status |
+|----|-------|--------|
+| VE-DISTRO-ADR-0001 | [Upstream-overlay policy](VE-DISTRO-ADR-0001-upstream-overlay-policy.md) | Accepted |
+| VE-DISTRO-ADR-0002 | [Local-source-first builds](VE-DISTRO-ADR-0002-local-source-first-builds.md) | Accepted |
+| VE-DISTRO-ADR-0003 | [UTF-8 lane is the primary planned operator lane](VE-DISTRO-ADR-0003-utf8-primary-lane.md) | Accepted |

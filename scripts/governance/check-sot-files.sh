@@ -17,8 +17,9 @@ REQUIRED_FILES=(
   "docs/reference/runtime-proof-policy.md"
   "docs/reference/port-registry.md"
   "docs/explanation/governed-build-protocol.md"
-  "docs/adrs/ADR-0001-upstream-overlay-policy.md"
-  "docs/adrs/ADR-0002-local-source-first-builds.md"
+  "docs/adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md"
+  "docs/adrs/VE-DISTRO-ADR-0002-local-source-first-builds.md"
+  "docs/adrs/VE-DISTRO-ADR-0003-utf8-primary-lane.md"
   "locks/worldvista-sources.lock.json"
 )
 

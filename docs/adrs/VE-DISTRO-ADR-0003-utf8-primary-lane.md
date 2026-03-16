@@ -1,6 +1,6 @@
-# ADR-0003: UTF-8 lane is the primary planned operator lane
+# VE-DISTRO-ADR-0003: UTF-8 lane is the primary planned operator lane
 
-> **Enterprise ID:** VE-DISTRO-ADR-0003
+> **Legacy ID:** ADR-0003 (compatibility reference only)
 
 ## Status
 

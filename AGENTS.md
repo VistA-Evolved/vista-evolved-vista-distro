@@ -5,6 +5,16 @@
 > Tool-specific instruction files (CLAUDE.md, .cursor/rules/, .github/copilot-instructions.md)
 > are thin shims that point back here. If they conflict with this file, this file wins.
 
+> **Multi-root workspace note:** This AGENTS.md governs the `vista-evolved-vista-distro` repo only.
+> In a multi-root workspace, each repo has its own AGENTS.md. When you see `/AGENTS.md`
+> references in this repo's files, they mean **this file**, not a sibling repo's AGENTS.md.
+> The sibling repos (`VistA-Evolved` archive and `vista-evolved-platform`) are self-governing.
+> The archive repo's AGENTS.md is **reference material only** — it does not govern this repo.
+>
+> **Path disambiguation:** In task reports and all operator-facing outputs, use repo-prefixed
+> paths (e.g., `vista-evolved-vista-distro/AGENTS.md`) instead of bare paths (e.g., `/AGENTS.md`)
+> to eliminate ambiguity when multiple repos are open in the same workspace.
+
 ---
 
 ## 0. NON-NEGOTIABLE RULES
@@ -25,8 +35,8 @@
 | Policy | Canonical location |
 |--------|-------------------|
 | Upstream source strategy | `docs/reference/upstream-source-strategy.md` |
-| Upstream overlay policy | `docs/adrs/ADR-0001-upstream-overlay-policy.md` |
-| Local-source-first builds | `docs/adrs/ADR-0002-local-source-first-builds.md` |
+| Upstream overlay policy | `docs/adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md` |
+| Local-source-first builds | `docs/adrs/VE-DISTRO-ADR-0002-local-source-first-builds.md` |
 | Runtime truth | `docs/reference/runtime-truth.md` |
 | Runtime readiness levels | `docs/reference/runtime-readiness-levels.md` |
 | Customization policy | `docs/reference/customization-policy.md` |
@@ -114,6 +124,10 @@ Every AI task response MUST include:
 - **Risks:** known risks
 - **Next step:** what comes next
 ```
+
+> **Multi-root path rule:** All file paths in task reports must be repo-prefixed
+> (e.g., `vista-evolved-vista-distro/docs/adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md`)
+> to avoid ambiguity when multiple repos are open in the same workspace.
 
 ---
 

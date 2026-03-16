@@ -1,6 +1,6 @@
-# ADR-0002: Local-source-first builds
+# VE-DISTRO-ADR-0002: Local-source-first builds
 
-> **Enterprise ID:** VE-DISTRO-ADR-0002
+> **Legacy ID:** ADR-0002 (compatibility reference only)
 
 ## Status
 
