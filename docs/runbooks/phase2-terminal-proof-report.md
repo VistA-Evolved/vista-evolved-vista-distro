@@ -305,9 +305,13 @@ Select Systems Manager Menu <LOCAL SANDBOX> Option: ?
 
 ## Phase 3 Addendum — UTF-8 Lane Verification (2026-03-14)
 
+> **Canonical source:** The final bounded proof wording for UTF-8 claims lives in
+> `docs/reference/runtime-truth.md`. This addendum records what was tested and observed
+> on 2026-03-14. Where this addendum and runtime-truth.md differ, runtime-truth.md wins.
+
 The UTF-8 build lane (`docker/local-vista-utf8/`) has been built, booted, and
-verified through the full browser terminal path. This resolves the Phase 2
-finding that "UTF-8 runtime not proven."
+verified through the browser terminal path. This resolved the Phase 2
+finding that "UTF-8 runtime not proven" for the sign-on and I/O path.
 
 ### UTF-8 Lane Container
 
@@ -328,10 +332,10 @@ via the terminal-proof bridge (`server.mjs` targeting port 2226):
 | Latin accent (café) | `S X="caf"_$C(233) W X` | `café` — rendered correctly |
 | Latin accent (résumé) | `S X="r"_$C(233)_"sum"_$C(233) W X` | `résumé` — rendered correctly |
 | Spanish (Español) | `S X="Espa"_$C(241)_"ol" W X` | `Español` — rendered correctly |
-| CJK (世界) | `S X=$C(19990,30028) W X` | `世界` — rendered correctly |
+| CJK (世界) | `S X=$C(19990,30028) W X` | `世界` — rendered correctly (observation only; CJK is not a bounded product language) |
 | `$LENGTH` vs `$ZLENGTH` for café | `W $L(X)," ",$ZL(X)` | `4 5` — character count vs byte count correct |
-| `$LENGTH` vs `$ZLENGTH` for 世界 | `W $L(X)," ",$ZL(X)` | `2 6` — each CJK char = 3 bytes |
-| Global round-trip | `S ^TMP(...)=X W ^TMP(...)` | All multi-byte strings stored and retrieved correctly |
+| `$LENGTH` vs `$ZLENGTH` for 世界 | `W $L(X)," ",$ZL(X)` | `2 6` — each CJK char = 3 bytes (observation only) |
+| Global round-trip | `S ^TMP(...)=X W ^TMP(...)` | Multi-byte strings stored and retrieved correctly |
 
 ### No SSH leakage
 
@@ -351,10 +355,13 @@ via `EN^XPAR`.
 ### Charset Classification
 
 ```
-Full multilingual safe.
+UTF-8 I/O path verified for sign-on and bounded product languages (English, Korean, Spanish).
 ```
 
-The UTF-8 lane is the production-candidate browser terminal path.
+This verifies the UTF-8 sign-on and I/O path. It does not claim full VistA
+application-level localization, production-readiness of language pack integration,
+or non-product languages (Chinese, Japanese, Arabic) beyond render-path observation.
+See `docs/reference/runtime-truth.md` for the canonical bounded claim.
 
 ---
 

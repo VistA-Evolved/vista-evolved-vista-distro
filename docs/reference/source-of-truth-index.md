@@ -57,7 +57,7 @@
 
 - English is the baseline language.
 - Korean and Spanish are bounded product languages.
-- Terminal sign-off under UTF-8 is not yet complete.
+- UTF-8 sign-on, browser terminal, and bounded multilingual I/O (Korean, Spanish) are verified. See `docs/reference/runtime-truth.md`.
 
 ---
 
