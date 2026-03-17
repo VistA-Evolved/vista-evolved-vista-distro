@@ -27,4 +27,23 @@
 	- UTF-8 YottaDB shared-library path is in use.
 	- `KBANTCLN` now runs to completion under UTF-8 after replacing fresh-db FileMan lookups for files `.7`, `3.5`, and `19` with bootstrap-safe logic.
 	- both Dockerfiles now recompile `KBANTCLN.m` after copying it, which avoids stale upstream `KBANTCLN.o` reuse.
-- **Still unverified in UTF-8:** direct sign-on, browser terminal behavior, and multilingual input proof have not yet been rerun against the live `local-vista-utf8` container. This ADR does not claim those are complete.
+
+### UTF-8 runtime proof (2026-03-18)
+
+Live proof was executed against the running `local-vista-utf8` container (image `vista-distro:local-utf8`, sha256:82847200, built 2026-03-14). Evidence: `artifacts/logs/utf8-proof-20260318.log`.
+
+- **Direct sign-on: PASS.** `ACCESS CODE:` / `VERIFY CODE:` prompt appears and accepts credentials (PRO1234 / PRO1234!!) under `ydb_chset=UTF-8`, `LANG=en_US.UTF-8`, `LC_ALL=en_US.UTF-8`. Full menu loads. Banner: "VistA Evolved Local Sandbox / YottaDB-backed terminal runtime". Volume set: `ROU:LOCAL-VISTA-UTF8`. Exit code 0. No MUMPS errors.
+- **Browser terminal behavior: PASS.** The `terminal-proof` WebSocket-SSH bridge (port 2226) connects to the UTF-8 container, delivers the VistA sign-on banner at `ACCESS CODE:` prompt, accepts credentials, and displays the full menu. No shell leakage, no bash prompt, no `YDB>` visible. Device is `/dev/pts/0` (proper pseudo-terminal).
+- **Multilingual input: PASS.**
+	- English baseline: text roundtrips correctly through MUMPS W/R under UTF-8.
+	- Korean bounded check: `$LENGTH("한국어테스트")` returns 6 (character count), confirming true UTF-8 mode (M-mode would return 18 bytes). Korean input echoes correctly through browser→WebSocket→SSH→VistA→SSH→WebSocket roundtrip.
+	- Spanish bounded check: `$LENGTH("José")` returns 4 (character count, not 5 bytes). Spanish accented input echoes correctly through the full browser terminal roundtrip.
+	- `$ASCII($EXTRACT("한",1))` returns 54620 (U+D55C), confirming Unicode code point handling.
+	- Chinese and Arabic glyphs were observed to render/input correctly through the UTF-8 I/O path as a render-path observation only. These are not product languages.
+
+### What UTF-8 proof does NOT claim
+
+- Full VistA application-level localization. Menu text remains English; this is baseline sign-on and I/O path proof.
+- Production-readiness of language pack integration (ZVELPACK boot-time loading exists but was not specifically tested in this proof).
+- Chinese, Japanese, or Arabic as product languages. Only Korean and Spanish are bounded product languages per ADR-0003 and repo policy.
+- Long-duration terminal stability (proof was session-length).

@@ -16,5 +16,5 @@ Upstream fetch/pin, overlay (routines, install, patches), and local VistA runtim
 - Docker build completed for the local M-mode reference lane. See `docker/local-vista/` and `docs/reference/runtime-truth.md`.
 - Browser terminal proof completed under M-mode. See `docs/runbooks/phase2-terminal-proof-report.md`.
 - **UTF-8 is the primary planned operator lane** (VE-DISTRO-ADR-0003). M-mode is the rollback/reference/safety lane.
-- UTF-8 lane has passed image build and 5/5 compose readiness. Direct sign-on, browser terminal behavior, and multilingual input proof under UTF-8 are not yet verified.
+- UTF-8 lane has passed image build, 5/5 compose readiness, direct sign-on, browser terminal behavior, and multilingual input proof (Korean, Spanish). See `docs/reference/runtime-truth.md` for details and `artifacts/logs/utf8-proof-20260318.log` for evidence.
 - See `docs/reference/upstream-source-strategy.md` and `docs/adrs/` for upstream and overlay rules.

@@ -363,3 +363,40 @@ The UTF-8 lane is the production-candidate browser terminal path.
 - [ ] Patch `XUSHSH.m` for YottaDB-native SHA-256 hashing (use `$ZPIECE` or external plugin)
 - [ ] Patch `XLFIPV.m` to skip InterSystems-specific IPv6 code on GT.M/YottaDB
 - [ ] Consider adding NURSE and PHARMACIST demo users (from wvDemopi.m pattern)
+
+---
+
+## Runtime-Proof Reconciliation — UTF-8 Claims (2026-03-18)
+
+This addendum records the bounded runtime-proof reconciliation that verified
+three UTF-8 lane claims that were previously marked "still unverified" in
+`docs/reference/runtime-truth.md`. All tests ran against the live
+`local-vista-utf8` container (image sha256:82847200, built 2026-03-14).
+
+### Claims verified
+
+| Claim | Result | Method |
+|-------|--------|--------|
+| A. Direct sign-on under UTF-8 | **PASS** | `docker exec` login with PRO1234/PRO1234!! — full menu, clean exit |
+| B. Browser terminal behavior | **PASS** | WebSocket→SSH bridge (port 2226) — sign-on, login, menu, device `/dev/pts/0` |
+| C. Multilingual input | **PASS** | See sub-claims below |
+
+### Multilingual sub-claims
+
+| Sub-claim | Evidence |
+|-----------|----------|
+| C.1 English baseline | Text roundtrips correctly through MUMPS W/R |
+| C.2 Korean | `$L("한국어테스트")=6` (character count, not 18 bytes) — confirms UTF-8 mode |
+| C.3 Spanish | `$L("José")=4` (character count, not 5 bytes) |
+| C.4 Unicode code points | `$A($E("한",1))=54620` = U+D55C |
+
+Chinese and Arabic glyphs were observed to render through the I/O path but
+are not bounded product languages and are not claimed as verified.
+
+### Evidence
+
+Full proof transcript: `artifacts/logs/utf8-proof-20260318.log`
+
+### What this does NOT claim
+
+See "What UTF-8 proof does NOT claim" in `docs/reference/runtime-truth.md`.
