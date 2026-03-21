@@ -14,3 +14,4 @@ Technical references: policies, registries, and indexes.
 - [Customization Policy](customization-policy.md) — Overlay rules
 - [Port Registry](port-registry.md) — Assigned ports per lane
 - [Decision Index](decision-index.yaml) — Enterprise-namespaced ADR registry
+- [VistA RPC Reference Data](vista-rpc-reference-data.md) — Master index of all RPC reference material across repos

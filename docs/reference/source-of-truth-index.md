@@ -101,6 +101,19 @@
 
 ---
 
+## VistA RPC reference data
+
+| What | Where | Notes |
+|------|-------|-------|
+| **RPC reference index** | `docs/reference/vista-rpc-reference-data.md` | Quick-lookup index for all RPC data |
+| Vivian RPC index (3,747) | VistA-Evolved (frozen): `data/vista/vivian/rpc_index.json` | All known VistA RPCs |
+| Full File 8994 catalog | VistA-Evolved (frozen): `data/vista/rpcs/rpc-catalog.json` | ~4,500 RPCs with full param specs |
+| Domain admin specs (15) | VistA-Evolved (frozen): `data/vista/admin-specs/*.json` | Per-domain RPC specs |
+| Instance comparison | VistA-Evolved (frozen): `data/vista/vista_instance/rpc_present.json` | 2,508 RPCs in VEHU |
+| Platform-side full reference | vista-evolved-platform: `docs/reference/vista-rpc-reference-data.md` | Comprehensive DDR spec, external sources |
+
+---
+
 ## Cross-repo references
 
 | Repo | Namespace | Purpose |
