@@ -44,6 +44,9 @@ nav:
   - Explanation:
     - explanation/index.md
     - Governed Build Protocol: explanation/governed-build-protocol.md
+    - Live VistA Capability Probe Report: explanation/live-vista-capability-probe-report.md
+    - Live VistA RPC and Routine Availability Matrix: explanation/live-vista-rpc-and-routine-availability-matrix.md
+    - Live VistA Tenant Admin Feasibility Decision: explanation/live-vista-tenant-admin-feasibility-decision.md
   - ADRs:
     - adrs/index.md
     - "VE-DISTRO-ADR-0001: Upstream Overlay": adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md

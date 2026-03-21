@@ -131,7 +131,7 @@ service vista-broker
     wait         = no
     user         = vista
     server       = ${ydb_dist}/yottadb
-    server_args  = -direct  -run XWBTCPL
+    server_args  = -run GTMLNX^XWBTCPM
     env          = ydb_gbldir=${ydb_gbldir}
     env         += ydb_routines=${ydb_routines}
     env         += ydb_chset=${ydb_chset}

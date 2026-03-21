@@ -81,6 +81,7 @@
 |------|-------------------|-------|
 | M-mode health check | `scripts/verify/healthcheck-local-vista.ps1` | 5-level readiness check |
 | UTF-8 health check | `scripts/verify/healthcheck-local-vista-utf8.ps1` | 5-level readiness check |
+| Live tenant-admin capability probe package | `docs/explanation/live-vista-capability-probe-report.md` | 2026-03-21 live UTF-8 evidence package for tenant-admin feasibility |
 | Governance: doc roots | `scripts/governance/check-doc-roots.sh` | CI gate |
 | Governance: ADR index | `scripts/governance/check-adr-index.sh` | CI gate |
 | Governance: SOT files | `scripts/governance/check-sot-files.sh` | CI gate |
