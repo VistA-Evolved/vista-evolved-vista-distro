@@ -29,6 +29,7 @@ nav:
     - tutorials/index.md
   - How-to:
     - how-to/index.md
+    - ZVEUSMG Overlay Install: how-to/zveusmg-overlay-install.md
   - Reference:
     - reference/index.md
     - Source of Truth Index: reference/source-of-truth-index.md
@@ -41,12 +42,14 @@ nav:
     - Runtime Truth Governance: reference/runtime-truth-governance.md
     - Customization Policy: reference/customization-policy.md
     - Port Registry: reference/port-registry.md
+    - VistA RPC Reference Data: reference/vista-rpc-reference-data.md
   - Explanation:
     - explanation/index.md
     - Governed Build Protocol: explanation/governed-build-protocol.md
     - Live VistA Capability Probe Report: explanation/live-vista-capability-probe-report.md
     - Live VistA RPC and Routine Availability Matrix: explanation/live-vista-rpc-and-routine-availability-matrix.md
     - Live VistA Tenant Admin Feasibility Decision: explanation/live-vista-tenant-admin-feasibility-decision.md
+    - Project Context and Working Constitution: explanation/vista-evolved-project-context.md
   - ADRs:
     - adrs/index.md
     - "VE-DISTRO-ADR-0001: Upstream Overlay": adrs/VE-DISTRO-ADR-0001-upstream-overlay-policy.md

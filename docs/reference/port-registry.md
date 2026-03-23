@@ -1,6 +1,10 @@
 # Port Registry — VistA Evolved Distro
 
-> Canonical port assignments. Do not use ports outside this registry without updating this file.
+> Canonical port assignments for **distro** VistA runtime services. Do not use
+> ports outside this registry without updating this file.
+>
+> **Platform service ports** (control plane, tenant admin, PostgreSQL) are managed by
+> the platform repo: `vista-evolved-platform/docs/reference/port-registry.md`.
 
 ---
 
@@ -28,10 +32,10 @@
 
 | Repo | Service | Port | Notes |
 |------|---------|------|-------|
-| VistA-Evolved | VEHU RPC broker | 9431 | Dev sandbox |
-| VistA-Evolved | Legacy RPC broker | 9430 | Legacy WorldVistA |
-| VistA-Evolved | API server | 3001 | Fastify API |
-| vista-evolved-vista-distro | M-mode RPC | 9433 | Distro M-mode |
-| vista-evolved-vista-distro | M-mode SSH | 2225 | Distro terminal |
-| vista-evolved-vista-distro | UTF-8 RPC | 9434 | Distro UTF-8 |
-| vista-evolved-vista-distro | UTF-8 SSH | 2226 | Distro terminal |
+| vista-evolved-platform | Control plane review API | 4500 | HTTP |
+| vista-evolved-platform | Control plane admin API | 4510 | HTTP |
+| vista-evolved-platform | Tenant admin workspace | 4520 | HTTP |
+| vista-evolved-platform | Control plane PostgreSQL | 5433 | TCP |
+| VistA-Evolved (archive) | VEHU RPC broker | 9431 | Dev sandbox |
+| VistA-Evolved (archive) | Legacy RPC broker | 9430 | Legacy WorldVistA |
+| VistA-Evolved (archive) | API server | 3001 | Fastify API |

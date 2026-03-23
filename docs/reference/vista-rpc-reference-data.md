@@ -1,8 +1,12 @@
 # VistA RPC Reference Data
 
-> **Purpose:** Central index of all VistA RPC reference material available across the
-> VistA Evolved repos. AI coders and team members: read this FIRST before guessing
-> at RPC names, parameter formats, return types, or building new RPC calls.
+> **Purpose:** Distro-scoped RPC quick reference and pointer to the full index.
+>
+> **Canonical full reference:** `vista-evolved-platform/docs/reference/vista-rpc-reference-data.md`
+> contains the complete frozen-repo corpus tables (4,500+ RPCs), CPRS extraction (975 RPCs),
+> Vivian cross-references, instance comparisons, and coverage reports.
+> This distro file covers the DDR quick-reference and distro-specific ZVE* RPCs only.
+> For any RPC lookup not covered below, consult the platform file.
 
 ---
 
