@@ -5,7 +5,7 @@ ZVEADMN1 ; VE — Admin Keys, Params, Roles, Divisions, Alerts RPCs ; Apr 2026
  ;   ZVE KEY LIST       - List security keys from #19.1
  ;   ZVE KEY ASSIGN     - Assign key to user (ORES/ORELSE mutex)
  ;   ZVE KEY REMOVE     - Remove key from user
- ;   ZVE ESIG MANAGE    - E-sig status/clear (never view)
+ ;   ZVE ESIG MANAGE    - E-sig status/set/clear (never view)
  ;   ZVE ROLE TEMPLATE  - Role template bundles
  ;   ZVE PARAM GET      - Read kernel parameters
  ;   ZVE PARAM SET      - Set parameter with VHA enforcement
@@ -156,7 +156,7 @@ KEYREM(R,TARGETDUZ,KEYNAME) ;
  ; Output: "1^STATUS^SET|NONE" or "1^CLEARED" or "0^error"
  ; NOTE: No VIEW action. Admins can NEVER see e-sig codes.
  ; ============================================================
-ESIGMGT(R,TARGETDUZ,ACTION) ;
+ESIGMGT(R,TARGETDUZ,ACTION,P3,P4) ;
  S TARGETDUZ=+$G(TARGETDUZ)
  I 'TARGETDUZ S R(0)="0^DUZ required" Q
  I '$D(^VA(200,TARGETDUZ,0)) S R(0)="0^User not found" Q
@@ -173,7 +173,22 @@ ESIGMGT(R,TARGETDUZ,ACTION) ;
  . D AUDITLOG^ZVEADMIN("ESIG-CLEAR",TARGETDUZ,"Admin cleared e-signature")
  . S R(0)="1^CLEARED"
  ;
- S R(0)="0^Invalid ACTION: "_ACTION_" (use STATUS or CLEAR)" Q
+ I ACTION="SET" D  Q
+ . ; P3 = plaintext code, P4 = signature block name
+ . N CODE S CODE=$G(P3)
+ . I $L(CODE)<6 S R(0)="0^E-signature code must be at least 6 characters" Q
+ . N HASH S HASH=$$EN^XUSHSH(CODE)
+ . S ^VA(200,TARGETDUZ,20,0)=HASH
+ . ; Set signature block name (field 20.2) if provided
+ . N SBN S SBN=$G(P4)
+ . I SBN]"" D
+ . . N FDA,ERR
+ . . S FDA(200,TARGETDUZ_",",20.2)=SBN
+ . . D FILE^DIE("","FDA","ERR")
+ . D AUDITLOG^ZVEADMIN("ESIG-SET",TARGETDUZ,"E-signature code set via RPC")
+ . S R(0)="1^SET"
+ ;
+ S R(0)="0^Invalid ACTION: "_ACTION_" (use STATUS, SET, or CLEAR)" Q
  ;
  ; ============================================================
  ; ZVE ROLE TEMPLATE — Return role template key bundles

@@ -22,6 +22,7 @@ RUN ;
  D INSTALL^ZVEPAT
  D INSTALL^ZVEPAT1
  D INSTALL^ZVEADT
+ D INSTALL^ZVESITEV
  W !,""
  ;
  ; Step 2: Create context options and add RPCs
