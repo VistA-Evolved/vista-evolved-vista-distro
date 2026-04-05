@@ -38,7 +38,12 @@ INSTALL ;
  ; ============================================================
 WSGET(R,DIVIEN) ;
  S DIVIEN=+$G(DIVIEN)
- I 'DIVIEN S R(0)="0^Division IEN required" Q
+ I 'DIVIEN D  Q
+ . N CNT,WS,DEFS
+ . S DEFS="Dashboard^Patients^Scheduling^Clinical^Pharmacy^Lab^Imaging^Billing^Supply^Admin^Analytics"
+ . S CNT=0
+ . N I F I=1:1:11 S WS=$P(DEFS,U,I) Q:WS=""  S CNT=CNT+1,R(CNT)=WS_U_1
+ . S R(0)="1^"_CNT_"^OK"
  ;
  N CNT,WS
  S CNT=0
@@ -76,7 +81,8 @@ WSSET(R,DIVIEN,WORKSPACE,ENABLED) ;
 CRLIST(R) ;
  N CNT,ID,NM,DESC,KCNT
  S CNT=0
- S ID="" F  S ID=$O(^XTMP("ZVECR",ID)) Q:ID=""  Q:ID=0  D
+ S ID="" F  S ID=$O(^XTMP("ZVECR",ID)) Q:ID=""  D
+ . I ID=0 Q
  . S NM=$P($G(^XTMP("ZVECR",ID,0)),U,1)
  . S DESC=$P($G(^XTMP("ZVECR",ID,0)),U,2)
  . S KCNT=0 N K S K="" F  S K=$O(^XTMP("ZVECR",ID,"KEYS",K)) Q:K=""  S KCNT=KCNT+1
