@@ -51,13 +51,19 @@ KEYLIST(R,TARGETDUZ) ;
  . . S CNT=CNT+1,OUT(CNT)=$G(KKIEN)_U_KNAME
  ;
  ; List all keys from SECURITY KEY #19.1
- N IEN,NM,DESC,HCNT
+ ; Output: IEN^NAME^DESCRIPTION^HOLDER_COUNT^DESCRIPTIVE_NAME^PACKAGE_NAME
+ N IEN,NM,DESC,HCNT,DNAME,PKGIEN,PKGNAME
  S NM="" F  S NM=$O(^DIC(19.1,"B",NM)) Q:NM=""  D
  . S IEN=$O(^DIC(19.1,"B",NM,0)) Q:'IEN
  . S DESC=$P($G(^DIC(19.1,IEN,1)),U,1)
+ . ; Get descriptive name from SECURITY KEY #19.1 field 2
+ . S DNAME=$$GET1^DIQ(19.1,IEN_",",2,"E")
+ . ; Get package pointer from field 3, then resolve package name from PACKAGE #9.4
+ . S PKGIEN=$$GET1^DIQ(19.1,IEN_",",3,"I")
+ . S PKGNAME="" I +$G(PKGIEN) S PKGNAME=$$GET1^DIQ(9.4,PKGIEN_",",.01,"E")
  . ; Count holders via ^XUSEC cross-reference
  . S HCNT=0 N D S D=0 F  S D=$O(^XUSEC(NM,D)) Q:'D  S HCNT=HCNT+1
- . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_DESC_U_HCNT
+ . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_DESC_U_HCNT_U_$G(DNAME)_U_$G(PKGNAME)
  ;
 KLOUT ;
  S R(0)="1^"_CNT_"^OK"
@@ -110,6 +116,8 @@ KEYASSN(R,TARGETDUZ,KEYNAME) ;
  N MAXK S MAXK=+$O(^VA(200,TARGETDUZ,51,"A"),-1)+1
  S ^VA(200,TARGETDUZ,51,MAXK,0)=KEYNAME
  S ^VA(200,TARGETDUZ,51,"B",KEYNAME,MAXK)=""
+ ; Initialize subfile header piece 1 (subfile number) if first entry
+ I '$P($G(^VA(200,TARGETDUZ,51,0)),U,1) S $P(^VA(200,TARGETDUZ,51,0),U,1)="200.051"
  ; Update subfile header
  S $P(^VA(200,TARGETDUZ,51,0),U,3)=MAXK
  S $P(^VA(200,TARGETDUZ,51,0),U,4)=$P($G(^VA(200,TARGETDUZ,51,0)),U,4)+1
@@ -127,12 +135,10 @@ KEYASSN(R,TARGETDUZ,KEYNAME) ;
 KEYREM(R,TARGETDUZ,KEYNAME) ;
  S TARGETDUZ=+$G(TARGETDUZ)
  I 'TARGETDUZ S R(0)="0^DUZ required" Q
+ I '$D(^VA(200,TARGETDUZ,0)) S R(0)="0^User not found" Q
  S KEYNAME=$G(KEYNAME) I KEYNAME="" S R(0)="0^KEY name required" Q
  ;
- ; Remove from ^XUSEC
- K ^XUSEC(KEYNAME,TARGETDUZ)
- ;
- ; Remove from NEW PERSON #200 field 51
+ ; Remove from NEW PERSON #200 field 51 first (verify existence)
  N KIEN,FOUND S FOUND=0,KIEN=0
  F  S KIEN=$O(^VA(200,TARGETDUZ,51,KIEN)) Q:'KIEN  D  Q:FOUND
  . I $P($G(^VA(200,TARGETDUZ,51,KIEN,0)),U,1)=KEYNAME D
@@ -141,6 +147,9 @@ KEYREM(R,TARGETDUZ,KEYNAME) ;
  . . S FOUND=1
  ;
  I 'FOUND S R(0)="0^Key not assigned: "_KEYNAME Q
+ ;
+ ; Only remove from ^XUSEC after confirming the key was found
+ K ^XUSEC(KEYNAME,TARGETDUZ)
  ;
  ; Update subfile header count
  S $P(^VA(200,TARGETDUZ,51,0),U,4)=$P($G(^VA(200,TARGETDUZ,51,0)),U,4)-1
@@ -152,8 +161,8 @@ KEYREM(R,TARGETDUZ,KEYNAME) ;
  ; ============================================================
  ; ZVE ESIG MANAGE — E-signature management
  ; ============================================================
- ; Params: TARGETDUZ, ACTION (STATUS|CLEAR)
- ; Output: "1^STATUS^SET|NONE" or "1^CLEARED" or "0^error"
+ ; Params: TARGETDUZ, ACTION (STATUS|SET|CLEAR), P3 (plaintext code for SET), P4 (sig block name for SET)
+ ; Output: "1^STATUS^SET|NONE^blockName" or "1^CLEARED" or "1^SET" or "0^error"
  ; NOTE: No VIEW action. Admins can NEVER see e-sig codes.
  ; ============================================================
 ESIGMGT(R,TARGETDUZ,ACTION,P3,P4) ;
@@ -163,13 +172,17 @@ ESIGMGT(R,TARGETDUZ,ACTION,P3,P4) ;
  S ACTION=$$UP^XLFSTR($G(ACTION))
  ;
  I ACTION="STATUS" D  Q
- . N HAS S HAS=$S($D(^VA(200,TARGETDUZ,20))#2:"SET",1:"NONE")
+ . ; $D returns 10 for descendant-only; >0 catches both data and descendants
+ . N HAS S HAS=$S($D(^VA(200,TARGETDUZ,20,0))#2:"SET",$D(^VA(200,TARGETDUZ,20))>0:$S($P($G(^VA(200,TARGETDUZ,20,0)),U,4)]"":"SET",1:"NONE"),1:"NONE")
  . N BLOCK S BLOCK=$$GET1^DIQ(200,TARGETDUZ_",",20.2,"E")
  . S R(0)="1^STATUS^"_HAS_"^"_BLOCK
  ;
  I ACTION="CLEAR" D  Q
  . I '$D(^VA(200,TARGETDUZ,20)) S R(0)="0^No e-signature to clear" Q
- . K ^VA(200,TARGETDUZ,20)
+ . ; Only clear the e-sig hash (field 20.4) — preserve sig block name/title
+ . N FDA,ERR
+ . S FDA(200,TARGETDUZ_",",20.4)="@"
+ . D FILE^DIE("","FDA","ERR")
  . D AUDITLOG^ZVEADMIN("ESIG-CLEAR",TARGETDUZ,"Admin cleared e-signature")
  . S R(0)="1^CLEARED"
  ;
@@ -178,13 +191,16 @@ ESIGMGT(R,TARGETDUZ,ACTION,P3,P4) ;
  . N CODE S CODE=$G(P3)
  . I $L(CODE)<6 S R(0)="0^E-signature code must be at least 6 characters" Q
  . N HASH S HASH=$$EN^XUSHSH(CODE)
- . S ^VA(200,TARGETDUZ,20,0)=HASH
+ . ; Use FILE^DIE to set field 20.4, preserving sibling fields (20.2, 20.3)
+ . N FDA,ERR
+ . S FDA(200,TARGETDUZ_",",20.4)=HASH
+ . D FILE^DIE("","FDA","ERR")
  . ; Set signature block name (field 20.2) if provided
  . N SBN S SBN=$G(P4)
  . I SBN]"" D
- . . N FDA,ERR
- . . S FDA(200,TARGETDUZ_",",20.2)=SBN
- . . D FILE^DIE("","FDA","ERR")
+ . . N SFDA,SERR
+ . . S SFDA(200,TARGETDUZ_",",20.2)=SBN
+ . . D FILE^DIE("","SFDA","SERR")
  . D AUDITLOG^ZVEADMIN("ESIG-SET",TARGETDUZ,"E-signature code set via RPC")
  . S R(0)="1^SET"
  ;
