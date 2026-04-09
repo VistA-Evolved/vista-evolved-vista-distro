@@ -11,6 +11,9 @@ ZVEADMN1 ; VE — Admin Keys, Params, Roles, Divisions, Alerts RPCs ; Apr 2026
  ;   ZVE PARAM SET      - Set parameter with VHA enforcement
  ;   ZVE DIVISION LIST  - List all divisions
  ;   ZVE DIVISION ASSIGN- Assign division to user
+ ;   ZVE SERVICE LIST   - List service/section entries from #49
+ ;   ZVE KEY HOLDERS    - List DUZs holding a specific key (from ^XUSEC)
+ ;   ZVE PACKAGE LIST   - List all PACKAGE #9.4 entries with their prefix
  ;
  Q  ; No direct entry
  ;
@@ -25,6 +28,9 @@ INSTALL ;
  D REGONE^ZVEADMIN("ZVE PARAM SET","PARAMST","ZVEADMN1","Set parameter with VHA enforcement")
  D REGONE^ZVEADMIN("ZVE DIVISION LIST","DIVLIST","ZVEADMN1","List all divisions")
  D REGONE^ZVEADMIN("ZVE DIVISION ASSIGN","DIVASN","ZVEADMN1","Assign division to user")
+ D REGONE^ZVEADMIN("ZVE SERVICE LIST","SVCLIST","ZVEADMN1","List SERVICE/SECTION entries from #49")
+ D REGONE^ZVEADMIN("ZVE KEY HOLDERS","KEYHLD","ZVEADMN1","List holders of a security key from ^XUSEC")
+ D REGONE^ZVEADMIN("ZVE PACKAGE LIST","PKGLIST","ZVEADMN1","List all PACKAGE #9.4 entries with prefix")
  W !,"=== ZVEADMN1 install complete ==="
  Q
  ;
@@ -52,18 +58,30 @@ KEYLIST(R,TARGETDUZ) ;
  ;
  ; List all keys from SECURITY KEY #19.1
  ; Output: IEN^NAME^DESCRIPTION^HOLDER_COUNT^DESCRIPTIVE_NAME^PACKAGE_NAME
- N IEN,NM,DESC,HCNT,DNAME,PKGIEN,PKGNAME
+ ; DD for SECURITY KEY #19.1:
+ ;   .01 NAME            (0;1)
+ ;   .02 DESCRIPTIVE NAME (0;2)  <- human label on some keys
+ ;   1   DESCRIPTION     (1;0)   word-processing subfile at ^DIC(19.1,IEN,1,N,0)
+ ; There is no package pointer in #19.1 — server.mjs derives it by name prefix.
+ N IEN,NM,DESC,HCNT,DNAME,WPLN,WPIDX,WPMAX
  S NM="" F  S NM=$O(^DIC(19.1,"B",NM)) Q:NM=""  D
  . S IEN=$O(^DIC(19.1,"B",NM,0)) Q:'IEN
- . S DESC=$P($G(^DIC(19.1,IEN,1)),U,1)
- . ; Get descriptive name from SECURITY KEY #19.1 field 2
- . S DNAME=$$GET1^DIQ(19.1,IEN_",",2,"E")
- . ; Get package pointer from field 3, then resolve package name from PACKAGE #9.4
- . S PKGIEN=$$GET1^DIQ(19.1,IEN_",",3,"I")
- . S PKGNAME="" I +$G(PKGIEN) S PKGNAME=$$GET1^DIQ(9.4,PKGIEN_",",.01,"E")
+ . ; Field .02 DESCRIPTIVE NAME (human title like "Laboratory Technologist")
+ . S DNAME=$$GET1^DIQ(19.1,IEN_",",".02","E")
+ . ; Field 1 DESCRIPTION — walk word-processing subfile, join up to 240 chars
+ . S DESC="",WPIDX=0,WPMAX=240
+ . F  S WPIDX=$O(^DIC(19.1,IEN,1,WPIDX)) Q:'WPIDX  D  Q:$L(DESC)>WPMAX
+ . . S WPLN=$G(^DIC(19.1,IEN,1,WPIDX,0))
+ . . I WPLN="" Q
+ . . I DESC'="" S DESC=DESC_" "
+ . . S DESC=DESC_WPLN
+ . I $L(DESC)>WPMAX S DESC=$E(DESC,1,WPMAX-3)_"..."
+ . ; Strip carets (pipe delimiter) and excess whitespace from description
+ . S DESC=$TR(DESC,"^","-")
  . ; Count holders via ^XUSEC cross-reference
  . S HCNT=0 N D S D=0 F  S D=$O(^XUSEC(NM,D)) Q:'D  S HCNT=HCNT+1
- . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_DESC_U_HCNT_U_$G(DNAME)_U_$G(PKGNAME)
+ . ; Package name left empty — resolved in server.mjs from prefix table
+ . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_DESC_U_HCNT_U_$G(DNAME)_U_""
  ;
 KLOUT ;
  S R(0)="1^"_CNT_"^OK"
@@ -450,3 +468,71 @@ DIVASN(R,TARGETDUZ,DIVIEN,ACTION) ;
  . S R(0)="1^OK^REMOVE"
  ;
  S R(0)="0^Invalid ACTION: "_ACTION_" (use ADD or REMOVE)" Q
+ ;
+ ; ============================================================
+ ; ZVE PACKAGE LIST — Return every PACKAGE #9.4 entry with its prefix
+ ; ============================================================
+ ; Params: none
+ ; Output:
+ ;   "1^COUNT^OK"
+ ;   "PREFIX^NAME"  (one row per package that has a prefix populated)
+ ; Used by the web app to build a live security-key → package mapping
+ ; driven entirely by VistA itself (no hardcoded prefix tables).
+ ; ============================================================
+PKGLIST(R) ;
+ N CNT,OUT,IEN,PFX,NM
+ S CNT=0,IEN=0
+ F  S IEN=$O(^DIC(9.4,IEN)) Q:'IEN  D
+ . S PFX=$P($G(^DIC(9.4,IEN,0)),U,2) Q:PFX=""
+ . S NM=$P($G(^DIC(9.4,IEN,0)),U,1) Q:NM=""
+ . S CNT=CNT+1,OUT(CNT)=PFX_U_NM
+ ;
+ S R(0)="1^"_CNT_"^OK"
+ N I F I=1:1:CNT S R(I)=OUT(I)
+ Q
+ ;
+ ; ============================================================
+ ; ZVE KEY HOLDERS — List DUZs that hold a specific security key
+ ; ============================================================
+ ; Params: KEYNAME
+ ; Output:
+ ;   "1^COUNT^OK"
+ ;   "DUZ^NAME"  (one row per holder)
+ ; Source: ^XUSEC(KEYNAME, DUZ) — the authoritative Kernel security xref
+ ; ============================================================
+KEYHLD(R,KEYNAME) ;
+ N CNT,OUT,DUZ,NM
+ S CNT=0
+ S KEYNAME=$G(KEYNAME)
+ I KEYNAME="" S R(0)="0^KEYNAME required" Q
+ I '$D(^XUSEC(KEYNAME)) S R(0)="1^0^OK" Q
+ S DUZ=0
+ F  S DUZ=$O(^XUSEC(KEYNAME,DUZ)) Q:'DUZ  D
+ . S NM=$P($G(^VA(200,DUZ,0)),U,1)
+ . S CNT=CNT+1,OUT(CNT)=DUZ_U_NM
+ ;
+ S R(0)="1^"_CNT_"^OK"
+ N I F I=1:1:CNT S R(I)=OUT(I)
+ Q
+ ;
+ ; ============================================================
+ ; ZVE SERVICE LIST — List all SERVICE/SECTION entries from #49
+ ; ============================================================
+ ; Params: none
+ ; Output:
+ ;   "1^COUNT^OK"
+ ;   "IEN^NAME^ABBREVIATION^TYPE"
+ ;   Used to populate the Department dropdown in StaffForm.
+ ; ============================================================
+SVCLIST(R) ;
+ N CNT,OUT,IEN,NM,AB,TP
+ S CNT=0,IEN=0
+ F  S IEN=$O(^DIC(49,IEN)) Q:'IEN  D
+ . S NM=$$GET1^DIQ(49,IEN_",",".01","E") Q:NM=""
+ . S AB=$$GET1^DIQ(49,IEN_",","1","E")
+ . S TP=$$GET1^DIQ(49,IEN_",","2","E")
+ . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_AB_U_TP
+ ;
+ S R(0)="1^"_CNT_"^OK"
+ N I F I=1:1:CNT S R(I)=OUT(I)
+ Q
