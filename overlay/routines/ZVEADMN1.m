@@ -321,37 +321,68 @@ ROLETPL(R,ROLENAME) ;
  ;   "PARAM^name^value^description"
  ; ============================================================
 PARAMGT(R) ;
- N CNT,OUT
+ N CNT,OUT,V
  S CNT=0
  ;
  ; Read KERNEL SYSTEM PARAMETERS #8989.3
  ; IEN 1 is always the system-level entry
  I '$D(^XTV(8989.3,1,0)) S R(0)="0^No Kernel System Parameters found" Q
  ;
- ; Key parameters — field numbers verified against DD
- N DOMAIN S DOMAIN=$$GET1^DIQ(8989.3,"1,",.01,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"DOMAIN"_U_DOMAIN_U_"Site domain name"
+ ; --- Organization identity ---
+ S V=$$GET1^DIQ(8989.3,"1,",.01,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"DOMAIN"_U_V_U_"Site domain name"
+ S V=$$GET1^DIQ(8989.3,"1,",217,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"SITE NAME"_U_V_U_"Default institution / facility name"
+ S V=$$GET1^DIQ(8989.3,"1,",9,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"AGENCY CODE"_U_V_U_"Organization type (VA, IHS, DoD, Private)"
+ S V=$$GET1^DIQ(8989.3,"1,",501,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"PRODUCTION"_U_V_U_"Production / test environment"
  ;
- N SITE S SITE=$$GET1^DIQ(8989.3,"1,",217,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"SITE NAME"_U_SITE_U_"Facility name"
+ ; --- Login security (Screen 5 Section A) ---
+ S V=$$GET1^DIQ(8989.3,"1,",210,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"AUTOLOGOFF"_U_V_U_"Session auto-signoff timeout (seconds)"
+ S V=$$GET1^DIQ(8989.3,"1,",202,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"LOCKOUT ATTEMPTS"_U_V_U_"Failed sign-in attempts before lockout"
+ S V=$$GET1^DIQ(8989.3,"1,",203,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"LOCKOUT DURATION"_U_V_U_"Lockout duration (seconds) after failed attempts"
+ S V=$$GET1^DIQ(8989.3,"1,",214,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"PASSWORD EXPIRATION"_U_V_U_"Days until verify code expires"
+ S V=$$GET1^DIQ(8989.3,"1,",204,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"MULTIPLE SIGN-ON"_U_V_U_"Allow the same user on multiple devices (YES/NO)"
+ S V=$$GET1^DIQ(8989.3,"1,",219,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"MAX SIGN-ON LIMIT"_U_V_U_"Max concurrent sessions allowed per user"
+ S V=$$GET1^DIQ(8989.3,"1,",230,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"BROKER TIMEOUT"_U_V_U_"Broker activity timeout (seconds)"
  ;
- N PROD S PROD=$$GET1^DIQ(8989.3,"1,",501,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"PRODUCTION"_U_PROD_U_"Production/test indicator"
+ ; --- Account policies (Screen 5 Section C) ---
+ S V=$$GET1^DIQ(8989.3,"1,",11,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"AUTO ACCESS CODES"_U_V_U_"Auto-generate access codes for new users (YES/NO)"
+ S V=$$GET1^DIQ(8989.3,"1,",11.2,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"AUTO VERIFY CODES"_U_V_U_"Auto-generate verify codes for new users (YES/NO)"
  ;
- N AUTOLO S AUTOLO=$$GET1^DIQ(8989.3,"1,",210,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"AUTOLOGOFF"_U_AUTOLO_U_"Session timeout (seconds)"
+ ; --- Audit and logging (Screen 5 Section D) ---
+ S V=$$GET1^DIQ(8989.3,"1,",19,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"OPTION AUDIT"_U_V_U_"Option audit mode (A=All, N=None, S=Specific)"
+ S V=$$GET1^DIQ(8989.3,"1,",19.4,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"INITIATE AUDIT"_U_V_U_"Audit start date"
+ S V=$$GET1^DIQ(8989.3,"1,",19.5,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"TERMINATE AUDIT"_U_V_U_"Audit end date"
+ S V=$$GET1^DIQ(8989.3,"1,",212.5,"E")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"FAILED ACCESS AUDIT"_U_V_U_"Failed access logging mode"
  ;
- N LOCKOUT S LOCKOUT=$$GET1^DIQ(8989.3,"1,",202,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"LOCKOUT ATTEMPTS"_U_LOCKOUT_U_"Failed sign-in attempts before lockout"
- ;
- N PWEXP S PWEXP=$$GET1^DIQ(8989.3,"1,",214,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"PASSWORD EXPIRATION"_U_PWEXP_U_"Days until verify code expires"
- ;
- N BRKTMO S BRKTMO=$$GET1^DIQ(8989.3,"1,",230,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"BROKER TIMEOUT"_U_BRKTMO_U_"Broker activity timeout"
- ;
- N AGENCY S AGENCY=$$GET1^DIQ(8989.3,"1,",9,"E")
- S CNT=CNT+1,OUT(CNT)="PARAM"_U_"AGENCY CODE"_U_AGENCY_U_"VA agency code"
+ ; --- Intro / welcome message (Screen 6) ---
+ ; INTRO MESSAGE is a word-processing multiple at node INTRO;0, subfile 8989.324.
+ ; Concatenate lines into a single string with \n separators, cap to 400 chars.
+ N WPOUT,WPIDX,WPLINE
+ S WPOUT="",WPIDX=0
+ F  S WPIDX=$O(^XTV(8989.3,1,"INTRO",WPIDX)) Q:'WPIDX  D  Q:$L(WPOUT)>400
+ . S WPLINE=$G(^XTV(8989.3,1,"INTRO",WPIDX,0))
+ . I WPLINE="" Q
+ . I WPOUT'="" S WPOUT=WPOUT_$C(10)
+ . S WPOUT=WPOUT_WPLINE
+ I $L(WPOUT)>400 S WPOUT=$E(WPOUT,1,397)_"..."
+ S WPOUT=$TR(WPOUT,"^","-")
+ S CNT=CNT+1,OUT(CNT)="PARAM"_U_"INTRO MESSAGE"_U_WPOUT_U_"Welcome message shown on the sign-on screen"
  ;
  S R(0)="1^"_CNT_"^OK"
  N I F I=1:1:CNT S R(I)=OUT(I)
@@ -368,7 +399,7 @@ PARAMST(R,PARAMNAME,VALUE,REASON) ;
  I PARAMNAME="" S R(0)="0^Parameter name required" Q
  S VALUE=$G(VALUE)
  ;
- ; === VHA DIRECTIVE 6500 ENFORCEMENT ===
+ ; === VHA DIRECTIVE 6500 ENFORCEMENT (applied BEFORE the FileMan write) ===
  N REJECT
  I PARAMNAME="AUTOLOGOFF" D  Q:$G(REJECT)
  . I +VALUE>900 S REJECT=1 S R(0)="0^Session timeout cannot exceed 900 seconds (15 min) per VHA Directive 6500" Q
@@ -378,22 +409,73 @@ PARAMST(R,PARAMNAME,VALUE,REASON) ;
  . I +VALUE>5 S REJECT=1 S R(0)="0^Failed sign-in lockout cannot exceed 5 attempts per VHA Directive 6500" Q
  . I +VALUE<1 S REJECT=1 S R(0)="0^Failed sign-in lockout must be at least 1 per VHA Directive 6500" Q
  ;
+ I PARAMNAME="LOCKOUT DURATION" D  Q:$G(REJECT)
+ . I +VALUE<30 S REJECT=1 S R(0)="0^Lockout duration must be at least 30 seconds" Q
+ . I +VALUE>86400 S REJECT=1 S R(0)="0^Lockout duration cannot exceed 86400 seconds (24 hours)" Q
+ ;
  I PARAMNAME="PASSWORD EXPIRATION" D  Q:$G(REJECT)
  . I +VALUE>90 S REJECT=1 S R(0)="0^Password expiration cannot exceed 90 days per VHA Directive 6500" Q
  . I +VALUE<1 S REJECT=1 S R(0)="0^Password expiration must be at least 1 day per VHA Directive 6500" Q
  ;
- ; Map parameter names to KSP #8989.3 fields (verified against DD)
+ I PARAMNAME="MAX SIGN-ON LIMIT" D  Q:$G(REJECT)
+ . ; An empty value clears the field (unlimited). Any non-empty must be >= 1.
+ . I VALUE="" Q
+ . I +VALUE<1 S REJECT=1 S R(0)="0^Max concurrent sessions must be at least 1 (leave empty for unlimited)" Q
+ . I +VALUE>999 S REJECT=1 S R(0)="0^Max concurrent sessions cannot exceed 999" Q
+ ;
+ ; YES/NO normalization for boolean-ish fields. Kernel stores these as set-of-codes.
+ ; MULTIPLE SIGN-ON: y/n  → valid set values are "y" for YES, "n" for NO.
+ I PARAMNAME="MULTIPLE SIGN-ON" D
+ . I $$UP^XLFSTR(VALUE)="YES"!($$UP^XLFSTR(VALUE)="Y")!(VALUE=1) S VALUE="y"
+ . E  I $$UP^XLFSTR(VALUE)="NO"!($$UP^XLFSTR(VALUE)="N")!(VALUE=0) S VALUE="n"
+ I PARAMNAME="AUTO ACCESS CODES"!(PARAMNAME="AUTO VERIFY CODES") D
+ . I $$UP^XLFSTR(VALUE)="YES"!($$UP^XLFSTR(VALUE)="Y")!(VALUE=1) S VALUE="y"
+ . E  I $$UP^XLFSTR(VALUE)="NO"!($$UP^XLFSTR(VALUE)="N")!(VALUE=0) S VALUE="n"
+ ;
+ ; INTRO MESSAGE is a word-processing field (#240) at node "INTRO;0", and
+ ; cannot be written via the scalar FILE^DIE path. Route it through WP^DIE.
+ ; This branch must QUIT before the scalar FNUM mapping below.
+ I PARAMNAME="INTRO MESSAGE" D  Q
+ . N WP,WPERR,NL,P,REMAIN
+ . S NL=0,REMAIN=VALUE
+ . F  S NL=NL+1 Q:NL>20  D  Q:REMAIN=""
+ . . S P=$F(REMAIN,$C(10))
+ . . I P=0 S WP(NL,0)=REMAIN,REMAIN="" Q
+ . . S WP(NL,0)=$E(REMAIN,1,P-2),REMAIN=$E(REMAIN,P,$L(REMAIN))
+ . I NL=0 S WP(1,0)=""
+ . D WP^DIE(8989.3,"1,",240,"K","WP","WPERR")
+ . I $D(WPERR) S R(0)="0^Failed to set welcome message: "_$G(WPERR("DIERR",1,"TEXT",1)) Q
+ . D AUDITLOG^ZVEADMIN("PARAM-SET","KSP","INTRO MESSAGE updated. Reason: "_$G(REASON))
+ . S R(0)="1^OK^INTRO MESSAGE^(welcome message updated)"
+ ;
+ ; Map remaining parameter names to KSP #8989.3 field numbers
+ ; (verified against the DD in the live VEHU container).
  N FNUM
  I PARAMNAME="AUTOLOGOFF" S FNUM=210
  E  I PARAMNAME="LOCKOUT ATTEMPTS" S FNUM=202
+ E  I PARAMNAME="LOCKOUT DURATION" S FNUM=203
  E  I PARAMNAME="PASSWORD EXPIRATION" S FNUM=214
+ E  I PARAMNAME="MULTIPLE SIGN-ON" S FNUM=204
+ E  I PARAMNAME="MAX SIGN-ON LIMIT" S FNUM=219
  E  I PARAMNAME="BROKER TIMEOUT" S FNUM=230
  E  I PARAMNAME="AGENCY CODE" S FNUM=9
+ E  I PARAMNAME="OPTION AUDIT" S FNUM=19
+ E  I PARAMNAME="INITIATE AUDIT" S FNUM=19.4
+ E  I PARAMNAME="TERMINATE AUDIT" S FNUM=19.5
+ E  I PARAMNAME="FAILED ACCESS AUDIT" S FNUM=212.5
+ E  I PARAMNAME="AUTO ACCESS CODES" S FNUM=11
+ E  I PARAMNAME="AUTO VERIFY CODES" S FNUM=11.2
  E  D  Q
- . S R(0)="0^Unknown parameter: "_PARAMNAME_" (supported: AUTOLOGOFF, LOCKOUT ATTEMPTS, PASSWORD EXPIRATION, BROKER TIMEOUT, AGENCY CODE)"
+ . S R(0)="0^Unknown parameter: "_PARAMNAME
  ;
- N FDA,DIERR
- S FDA(8989.3,"1,",FNUM)=VALUE
+ ; FileMan's FILE^DIE: an "@" value deletes the field from the record.
+ ; An empty string is not accepted for some field types, so we explicitly
+ ; map "" → "@" for writable scalar fields where an unset value is
+ ; semantically meaningful (e.g. MAX SIGN-ON LIMIT unlimited).
+ N FDA,DIERR,WRITE
+ I VALUE="" S WRITE="@"
+ E  S WRITE=VALUE
+ S FDA(8989.3,"1,",FNUM)=WRITE
  D FILE^DIE("E","FDA","DIERR")
  I $D(DIERR) S R(0)="0^Failed to set "_PARAMNAME_": "_$G(DIERR("DIERR",1,"TEXT",1)) Q
  ;
