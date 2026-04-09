@@ -49,12 +49,15 @@ KEYLIST(R,TARGETDUZ) ;
  S TARGETDUZ=$G(TARGETDUZ)
  ;
  I TARGETDUZ]"",+TARGETDUZ>0 D  G KLOUT
- . ; List keys for specific user
- . N KIEN,KNAME,KKIEN
+ . ; List keys for specific user. Field 51 at ^VA(200,DUZ,51,KIEN,0) piece 1
+ . ; is a POINTER to #19.1 (not the key name). Resolve with DIQ "E" flag.
+ . N KIEN,KNAME,KKIEN,KIENS
  . S KIEN=0 F  S KIEN=$O(^VA(200,+TARGETDUZ,51,KIEN)) Q:'KIEN  D
- . . S KNAME=$P($G(^VA(200,+TARGETDUZ,51,KIEN,0)),U,1) Q:KNAME=""
- . . S KKIEN=$O(^DIC(19.1,"B",KNAME,0))
- . . S CNT=CNT+1,OUT(CNT)=$G(KKIEN)_U_KNAME
+ . . S KIENS=KIEN_","_TARGETDUZ_","
+ . . S KKIEN=$$GET1^DIQ(200.051,KIENS,.01,"I")
+ . . S KNAME=$$GET1^DIQ(200.051,KIENS,.01,"E")
+ . . Q:KNAME=""
+ . . S CNT=CNT+1,OUT(CNT)=KKIEN_U_KNAME
  ;
  ; List all keys from SECURITY KEY #19.1
  ; Output: IEN^NAME^DESCRIPTION^HOLDER_COUNT^DESCRIPTIVE_NAME^PACKAGE_NAME
