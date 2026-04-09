@@ -39,6 +39,15 @@ KEYS(R,ACT,TDUZ,KNM) ; RPC ZVE USMG KEYS — params: ACTION, target-DUZ, KEY nam
  I ACT'="ADD",ACT'="DEL" S R(0)="0^Invalid ACTION" Q
  I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
  ;
+ ; Validate the key name exists in SECURITY KEY #19.1. Without this the
+ ; ADD path would happily file arbitrary text as if it were a real key.
+ I '$D(^DIC(19.1,"B",KNM)) S R(0)="0^Security key not found: "_KNM Q
+ ;
+ ; For ADD, also reject if the user already holds this key. VistA's
+ ; ^XUSEC and File 200 field 51 both should remain single-valued per key
+ ; per user — an idempotent ADD shouldn't silently create a duplicate row.
+ I ACT="ADD" I $D(^XUSEC(KNM,+TDUZ)) S R(0)="0^User already holds key: "_KNM Q
+ ;
  ; ORES/ORELSE mutual exclusion check (CONFLICT NEWed at this level)
  N CONFLICT S CONFLICT=0
  I ACT="ADD" D
@@ -148,3 +157,35 @@ REACT(R,TDUZ) ; RPC ZVE USMG REACT — delete termination date
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
  D AUDITLOG^ZVEADMIN("USER-REACT",+TDUZ,"Reactivated")
  S R(0)="1^OK" Q
+ ;
+AUDLOG(R,TDUZ,MAX) ; RPC ZVE USMG AUDLOG — ZVE administrative audit log
+ ; Walks the ZVE-local audit log written by AUDITLOG^ZVEADMIN, stored at
+ ; ^ZVEADM("AUDIT",LN)="EVT^DATE^SRCDUZ^TARGETDUZ^MSG". Returns the most
+ ; recent MAX entries, newest first, with an optional target-DUZ filter.
+ ;
+ ; Params:
+ ;   TDUZ — optional target DUZ filter. Empty or "*" for all users.
+ ;   MAX  — optional result cap (default 50, hard cap 500)
+ ;
+ ; Output:
+ ;   Line 0: "1^COUNT^OK"
+ ;   Data  : "IEN^FILE^DATETIME^EVENT^FIELDNUM^USERDUZ^OLD^NEW^DESCRIPTION"
+ N CNT,OUT,LIMIT
+ S TDUZ=$G(TDUZ)
+ S LIMIT=+$G(MAX) I LIMIT<1 S LIMIT=50
+ I LIMIT>500 S LIMIT=500
+ S CNT=0
+ ;
+ N LN S LN=""
+ F  S LN=$O(^ZVEADM("AUDIT",LN),-1) Q:LN=""!(CNT'<LIMIT)  D
+ . N Z,EVT,DT,SRC,TGT,MSG
+ . S Z=$G(^ZVEADM("AUDIT",LN))
+ . I Z="" Q
+ . S EVT=$P(Z,U,1),DT=$P(Z,U,2),SRC=$P(Z,U,3),TGT=$P(Z,U,4),MSG=$P(Z,U,5,99)
+ . I TDUZ]"",TDUZ'="*",+TDUZ'=+TGT Q
+ . S CNT=CNT+1
+ . S OUT(CNT)=LN_U_"200"_U_DT_U_EVT_U_""_U_SRC_U_""_U_""_U_MSG
+ ;
+ S R(0)="1^"_CNT_"^OK"
+ N I F I=1:1:CNT S R(I)=OUT(I)
+ Q
