@@ -100,18 +100,34 @@ CRED(R,TDUZ,AC,VC) ; RPC ZVE USMG CRED
  S R(0)="1^OK" Q
  ;
 ADD(R,NM,AC,VC) ; RPC ZVE USMG ADD — minimal user creation
+ ; File 200's .01 NAME input transform calls LAYGO^XUA4A7 which requires
+ ; the classic DIC variables to be set up. UPDATE^DIE doesn't export DIC,
+ ; so we use the older FILE^DICN pattern which is a standard FileMan
+ ; add-with-LAYGO path. LAYGO^XUA4A7 reads DIC(0) to know it's allowed
+ ; to create a new entry.
  I $G(NM)="" S R(0)="0^NAME required" Q
- N FDA,IEN,DIERR
- S FDA(200,"+1,",.01)=NM
- D UPDATE^DIE("E",$NA(FDA),$NA(IEN),$NA(DIERR))
- I $D(DIERR) S R(0)="0^UPDATE^DIE failed" Q
- ; Set hashed credentials via FILE^DIE (internal format)
- N CFDA,CERR
- I $G(AC)]"" S CFDA(200,IEN(1)_",",2)=$$EN^XUSHSH(AC)
- I $G(VC)]"" S CFDA(200,IEN(1)_",",11)=$$EN^XUSHSH(VC)
- I $D(CFDA)>1 D FILE^DIE("","CFDA","CERR")
- D AUDITLOG^ZVEADMIN("USER-ADD",+$G(IEN(1)),"Created user "_NM)
- S R(0)="1^"_$G(IEN(1)) Q
+ N DIC,X,Y,DUPDUZ,DIADD,DIC0SAVE
+ ; Refuse if name already exists to avoid accidental duplicate creation
+ S DUPDUZ=$O(^VA(200,"B",NM,0))
+ I +DUPDUZ>0 S R(0)="0^User already exists: "_NM_" (DUZ "_DUPDUZ_")" Q
+ S DIC="^VA(200,"
+ S DIC(0)="LX"
+ S DIC("DR")=""
+ S X=NM
+ D FILE^DICN
+ ; FILE^DICN returns Y = ien^name (positive IEN on success, -1 on failure)
+ I +Y<0 S R(0)="0^FILE^DICN failed for name "_NM Q
+ N NEWDUZ S NEWDUZ=+Y
+ ; Set hashed credentials via FILE^DIE. XUSHSH is the Kernel hash routine
+ ; that produces the same format XUS uses at sign-on, so the user can log
+ ; in immediately with these access/verify codes.
+ I $G(AC)]""!($G(VC)]"") D
+ . N CFDA,CERR
+ . I $G(AC)]"" S CFDA(200,NEWDUZ_",",2)=$$EN^XUSHSH(AC)
+ . I $G(VC)]"" S CFDA(200,NEWDUZ_",",11)=$$EN^XUSHSH(VC)
+ . D FILE^DIE("","CFDA","CERR")
+ D AUDITLOG^ZVEADMIN("USER-ADD",NEWDUZ,"Created user "_NM)
+ S R(0)="1^"_NEWDUZ Q
  ;
 DEACT(R,TDUZ) ; RPC ZVE USMG DEACT — set field 9 = today
  I '+$G(TDUZ) S R(0)="0^DUZ required" Q

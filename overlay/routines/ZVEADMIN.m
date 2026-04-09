@@ -122,17 +122,24 @@ DETAIL(R,TARGETDUZ) ;
  S R(LN)="1^1^OK"
  S LN=LN+1,R(LN)=TARGETDUZ_U_NM_U_DOB_U_SEX_U_SSN_U_STAT_U_TITLE_U_SVC_U_EMAIL_U_PHONE_U_LASTLOG_U_NPI_U_DEA_U_TAXON_U_PCLASS_U_ESIG
  ;
- ; Keys — field 51 (KEYS) stores a POINTER to SECURITY KEY #19.1.
- ; The raw piece 1 at ^VA(200,DUZ,51,KIEN,0) is the pointer IEN, not the
- ; name, so we resolve via $$GET1^DIQ with "E" flag to get the external
- ; (human-readable) value, and read the internal pointer separately.
- N KIEN,KNAME,KKIEN,KIENS
+ ; Keys — field 51 (KEYS) stores a POINTER to SECURITY KEY #19.1 when
+ ; populated through the standard Kernel KEYS option. Our in-house ZVE
+ ; USMG KEYS RPC writes the key NAME as a raw string instead. DETAIL
+ ; handles both formats: first try the DIQ pointer resolution (external
+ ; value); if that comes back empty, fall back to piece 1 of the zero
+ ; node (which is the raw name under the ZVE USMG convention).
+ N KIEN,KNAME,KKIEN,KIENS,RAW
  S KIEN=0 F  S KIEN=$O(^VA(200,TARGETDUZ,51,KIEN)) Q:'KIEN  D
  . S KIENS=KIEN_","_TARGETDUZ_","
- . S KKIEN=$$GET1^DIQ(200.051,KIENS,.01,"I")  ; internal = pointer IEN to #19.1
- . S KNAME=$$GET1^DIQ(200.051,KIENS,.01,"E")  ; external = resolved key name
+ . S KKIEN=$$GET1^DIQ(200.051,KIENS,.01,"I")
+ . S KNAME=$$GET1^DIQ(200.051,KIENS,.01,"E")
+ . I KNAME="" D
+ . . S RAW=$P($G(^VA(200,TARGETDUZ,51,KIEN,0)),U,1)
+ . . I RAW="" Q
+ . . S KNAME=RAW
+ . . S KKIEN=$O(^DIC(19.1,"B",RAW,0))
  . I KNAME="" Q
- . S LN=LN+1,R(LN)="KEY"_U_KKIEN_U_KNAME
+ . S LN=LN+1,R(LN)="KEY"_U_$G(KKIEN)_U_KNAME
  ;
  ; Divisions
  N DI,DIVIEN,DIVNM,STATION
