@@ -14,6 +14,7 @@ ZVEADMN1 ; VE — Admin Keys, Params, Roles, Divisions, Alerts RPCs ; Apr 2026
  ;   ZVE SERVICE LIST   - List service/section entries from #49
  ;   ZVE KEY HOLDERS    - List DUZs holding a specific key (from ^XUSEC)
  ;   ZVE PACKAGE LIST   - List all PACKAGE #9.4 entries with their prefix
+ ;   ZVE DD FIELDS      - Return field labels from any VistA DD
  ;
  Q  ; No direct entry
  ;
@@ -31,6 +32,7 @@ INSTALL ;
  D REGONE^ZVEADMIN("ZVE SERVICE LIST","SVCLIST","ZVEADMN1","List SERVICE/SECTION entries from #49")
  D REGONE^ZVEADMIN("ZVE KEY HOLDERS","KEYHLD","ZVEADMN1","List holders of a security key from ^XUSEC")
  D REGONE^ZVEADMIN("ZVE PACKAGE LIST","PKGLIST","ZVEADMN1","List all PACKAGE #9.4 entries with prefix")
+ D REGONE^ZVEADMIN("ZVE DD FIELDS","DDFLDS","ZVEADMN1","Return field labels from any VistA DD")
  W !,"=== ZVEADMN1 install complete ==="
  Q
  ;
@@ -630,6 +632,43 @@ SVCLIST(R) ;
  . S AB=$$GET1^DIQ(49,IEN_",","1","E")
  . S TP=$$GET1^DIQ(49,IEN_",","2","E")
  . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_AB_U_TP
+ ;
+ S R(0)="1^"_CNT_"^OK"
+ N I F I=1:1:CNT S R(I)=OUT(I)
+ Q
+ ;
+ ; ============================================================
+ ; ZVE DD FIELDS — Return field labels from a VistA DD
+ ; ============================================================
+ ; Params: FILENUM, FIELDLIST (semicolon-separated field numbers)
+ ; Output:
+ ;   "1^COUNT^OK"
+ ;   "FIELDNUM^LABEL^TYPE^STORAGE"
+ ; Used by the web app to resolve raw DDR field numbers into human
+ ; names so module-settings pages show "FLASH CARD PRINTER NAME"
+ ; instead of "Field 3 / Configuration parameter 3".
+ ; ============================================================
+DDFLDS(R,FILENUM,FIELDLIST) ;
+ S FILENUM=+$G(FILENUM)
+ I 'FILENUM S R(0)="0^File number required" Q
+ I '$D(^DD(FILENUM)) S R(0)="0^DD not found for file "_FILENUM Q
+ ;
+ N CNT,OUT,FLDS,I,FN,NM,TYP,LOC
+ S CNT=0
+ ; If FIELDLIST provided, only return those fields. Otherwise return all.
+ I $G(FIELDLIST)]"" D
+ . F I=1:1 S FN=$P(FIELDLIST,";",I) Q:FN=""  D
+ . . I '$D(^DD(FILENUM,FN,0)) S CNT=CNT+1,OUT(CNT)=FN_U_"(not in DD)"_U_""_U_"" Q
+ . . S NM=$P(^DD(FILENUM,FN,0),U,1)
+ . . S TYP=$P(^DD(FILENUM,FN,0),U,2)
+ . . S LOC=$P(^DD(FILENUM,FN,0),U,4)
+ . . S CNT=CNT+1,OUT(CNT)=FN_U_NM_U_TYP_U_LOC
+ E  D
+ . S FN=0 F  S FN=$O(^DD(FILENUM,FN)) Q:'FN  D
+ . . S NM=$P($G(^DD(FILENUM,FN,0)),U,1) Q:NM=""
+ . . S TYP=$P(^DD(FILENUM,FN,0),U,2)
+ . . S LOC=$P(^DD(FILENUM,FN,0),U,4)
+ . . S CNT=CNT+1,OUT(CNT)=FN_U_NM_U_TYP_U_LOC
  ;
  S R(0)="1^"_CNT_"^OK"
  N I F I=1:1:CNT S R(I)=OUT(I)
