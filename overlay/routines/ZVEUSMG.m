@@ -14,6 +14,9 @@ INSTALL ; Register RPCs in File #8994 (idempotent)
  D REGONE("ZVE USMG ADD","ADD","ZVEUSMG","Create File 200 stub user")
  D REGONE("ZVE USMG DEACT","DEACT","ZVEUSMG","Set termination date (field 9)")
  D REGONE("ZVE USMG REACT","REACT","ZVEUSMG","Clear termination date")
+ D REGONE("ZVE USMG TERM","TERM","ZVEUSMG","Full account termination (DISUSER + clear creds)")
+ D REGONE("ZVE USMG UNLOCK","UNLOCK","ZVEUSMG","Release a locked-out account")
+ D REGONE("ZVE USMG RENAME","RENAME","ZVEUSMG","Rename user (.01)")
  W !,"=== ZVE USMG install complete ==="
  Q
  ;
@@ -157,6 +160,87 @@ REACT(R,TDUZ) ; RPC ZVE USMG REACT — delete termination date
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
  D AUDITLOG^ZVEADMIN("USER-REACT",+TDUZ,"Reactivated")
  S R(0)="1^OK" Q
+ ;
+TERM(R,TDUZ) ; RPC ZVE USMG TERM — full account termination
+ ; Sets DISUSER (#200 field 7) = 1, sets TERMINATION DATE (field 9.2),
+ ; clears ACCESS CODE (field 2), clears VERIFY CODE (field 11),
+ ; clears the e-signature (field 20.4), and removes all assigned keys.
+ ; Mirrors the terminal "Terminate User" workflow used by site managers.
+ I '+$G(TDUZ) S R(0)="0^DUZ required" Q
+ I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
+ N FDA,DIERR
+ S FDA(200,TDUZ_",",7)=1
+ S FDA(200,TDUZ_",",9.2)=DT
+ S FDA(200,TDUZ_",",2)="@"
+ S FDA(200,TDUZ_",",11)="@"
+ S FDA(200,TDUZ_",",20.4)="@"
+ D FILE^DIE("","FDA","DIERR")
+ I $D(DIERR) S R(0)="0^FILE^DIE error: "_$G(DIERR("DIERR",1,"TEXT",1)) Q
+ ;
+ ; Remove all keys from #200 field 51 and from ^XUSEC. Walk in reverse so
+ ; deletes don't disturb the iteration.
+ N KIEN,KNM
+ S KIEN=$O(^VA(200,+TDUZ,51,""),-1)
+ F  Q:'KIEN  D  S KIEN=$O(^VA(200,+TDUZ,51,KIEN),-1)
+ . S KNM=$P($G(^VA(200,+TDUZ,51,KIEN,0)),U,1)
+ . I KNM]"" K ^XUSEC(KNM,+TDUZ),^VA(200,+TDUZ,51,"B",KNM,KIEN)
+ . K ^VA(200,+TDUZ,51,KIEN)
+ ;
+ ; Reset key subfile header counts and last-IEN
+ I $D(^VA(200,+TDUZ,51,0)) D
+ . S $P(^VA(200,+TDUZ,51,0),U,3)=0
+ . S $P(^VA(200,+TDUZ,51,0),U,4)=0
+ ;
+ ; Also clear the locked-out flag if set, so a future re-activation
+ ; doesn't surface a stale lockout state.
+ K ^XUSEC("LOCKED",+TDUZ)
+ ;
+ D AUDITLOG^ZVEADMIN("USER-TERM",+TDUZ,"Account fully terminated (creds + keys cleared)")
+ S R(0)="1^OK^Terminated" Q
+ ;
+UNLOCK(R,TDUZ) ; RPC ZVE USMG UNLOCK — release a locked-out account
+ ; VistA's standard sign-on lockout uses ^XUSEC("LOCKED",DUZ) to gate
+ ; further sign-on attempts after the failed-attempt threshold. The
+ ; classic terminal option is "Release User [XUSERREL]". Clearing the
+ ; node restores immediate sign-on access.
+ I '+$G(TDUZ) S R(0)="0^DUZ required" Q
+ I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
+ N WASLOCKED S WASLOCKED=$D(^XUSEC("LOCKED",+TDUZ))
+ K ^XUSEC("LOCKED",+TDUZ)
+ ;
+ ; Some sites also use field 7.3 (FAILED SIGN-ON ATTEMPTS counter) to
+ ; track lockout state. Reset it to clear the cumulative count.
+ N FDA,DIERR
+ S FDA(200,TDUZ_",",7.3)="@"
+ D FILE^DIE("","FDA","DIERR")
+ ; Field 7.3 may not exist at every site — DIERR here is non-fatal,
+ ; the lockout xref clear (above) is the canonical action.
+ ;
+ D AUDITLOG^ZVEADMIN("USER-UNLOCK",+TDUZ,"Account released from lockout")
+ S R(0)="1^OK^"_$S(WASLOCKED:"Was locked",1:"Was not locked")
+ Q
+ ;
+RENAME(R,TDUZ,NEWNAME) ; RPC ZVE USMG RENAME — rename user (.01)
+ ; Validates LAST,FIRST format and uniqueness, then files via FILE^DIE.
+ I '+$G(TDUZ) S R(0)="0^DUZ required" Q
+ I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
+ S NEWNAME=$$UP^XLFSTR($G(NEWNAME))
+ I NEWNAME="" S R(0)="0^NEWNAME required" Q
+ I NEWNAME'?1.30A1","1.30A.E S R(0)="0^Name must be in LAST,FIRST format" Q
+ ;
+ ; Reject duplicate names (FileMan uniqueness on .01 is enforced via input
+ ; transform but we surface a clearer error here).
+ N DUPDUZ S DUPDUZ=$O(^VA(200,"B",NEWNAME,0))
+ I +DUPDUZ>0,+DUPDUZ'=+TDUZ S R(0)="0^Name already in use by DUZ "_DUPDUZ Q
+ ;
+ N OLDNAME S OLDNAME=$$GET1^DIQ(200,TDUZ_",",.01,"E")
+ N FDA,DIERR
+ S FDA(200,TDUZ_",",.01)=NEWNAME
+ D FILE^DIE("","FDA","DIERR")
+ I $D(DIERR) S R(0)="0^FILE^DIE error: "_$G(DIERR("DIERR",1,"TEXT",1)) Q
+ ;
+ D AUDITLOG^ZVEADMIN("USER-RENAME",+TDUZ,"Renamed: "_OLDNAME_" -> "_NEWNAME)
+ S R(0)="1^OK^"_NEWNAME Q
  ;
 AUDLOG(R,TDUZ,MAX) ; RPC ZVE USMG AUDLOG — ZVE administrative audit log
  ; Walks the ZVE-local audit log written by AUDITLOG^ZVEADMIN, stored at

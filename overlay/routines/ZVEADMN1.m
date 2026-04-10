@@ -59,14 +59,24 @@ KEYLIST(R,TARGETDUZ) ;
  . . Q:KNAME=""
  . . S CNT=CNT+1,OUT(CNT)=KKIEN_U_KNAME
  ;
+ ; Build prefix→package map from PACKAGE #9.4 for key enrichment.
+ ; This replaces the server-side-only enrichment with M-native lookup so
+ ; the RPC itself returns descriptive name + package for every key.
+ N PKMAP,PIEN,PFX,PNM
+ S PIEN=0
+ F  S PIEN=$O(^DIC(9.4,PIEN)) Q:'PIEN  D
+ . S PFX=$P($G(^DIC(9.4,PIEN,0)),U,2) Q:PFX=""
+ . S PNM=$P($G(^DIC(9.4,PIEN,0)),U,1) Q:PNM=""
+ . S PKMAP(PFX)=PNM
+ ;
  ; List all keys from SECURITY KEY #19.1
  ; Output: IEN^NAME^DESCRIPTION^HOLDER_COUNT^DESCRIPTIVE_NAME^PACKAGE_NAME
  ; DD for SECURITY KEY #19.1:
  ;   .01 NAME            (0;1)
  ;   .02 DESCRIPTIVE NAME (0;2)  <- human label on some keys
  ;   1   DESCRIPTION     (1;0)   word-processing subfile at ^DIC(19.1,IEN,1,N,0)
- ; There is no package pointer in #19.1 — server.mjs derives it by name prefix.
- N IEN,NM,DESC,HCNT,DNAME,WPLN,WPIDX,WPMAX
+ ; Package resolved via longest-prefix match against PACKAGE #9.4.
+ N IEN,NM,DESC,HCNT,DNAME,WPLN,WPIDX,WPMAX,PKGNM,PK,BESTL
  S NM="" F  S NM=$O(^DIC(19.1,"B",NM)) Q:NM=""  D
  . S IEN=$O(^DIC(19.1,"B",NM,0)) Q:'IEN
  . ; Field .02 DESCRIPTIVE NAME (human title like "Laboratory Technologist")
@@ -83,8 +93,11 @@ KEYLIST(R,TARGETDUZ) ;
  . S DESC=$TR(DESC,"^","-")
  . ; Count holders via ^XUSEC cross-reference
  . S HCNT=0 N D S D=0 F  S D=$O(^XUSEC(NM,D)) Q:'D  S HCNT=HCNT+1
- . ; Package name left empty — resolved in server.mjs from prefix table
- . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_DESC_U_HCNT_U_$G(DNAME)_U_""
+ . ; Package lookup: longest-prefix match from PKMAP built above
+ . S PKGNM="",BESTL=0,PK=""
+ . F  S PK=$O(PKMAP(PK)) Q:PK=""  D
+ . . I $E(NM,1,$L(PK))=PK,$L(PK)>BESTL S PKGNM=PKMAP(PK),BESTL=$L(PK)
+ . S CNT=CNT+1,OUT(CNT)=IEN_U_NM_U_DESC_U_HCNT_U_$G(DNAME)_U_PKGNM
  ;
 KLOUT ;
  S R(0)="1^"_CNT_"^OK"
