@@ -141,21 +141,27 @@ ADD(R,NM,AC,VC) ; RPC ZVE USMG ADD — minimal user creation
  D AUDITLOG^ZVEADMIN("USER-ADD",NEWDUZ,"Created user "_NM)
  S R(0)="1^"_NEWDUZ Q
  ;
-DEACT(R,TDUZ) ; RPC ZVE USMG DEACT — set field 9 = today
+DEACT(R,TDUZ) ; RPC ZVE USMG DEACT — soft deactivation
  I '+$G(TDUZ) S R(0)="0^DUZ required" Q
  I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
  N FDA,DIERR
- S FDA(200,TDUZ_",",9)=DT
+ ; Set DISUSER flag (node 7, piece 1) — blocks sign-on
+ S $P(^VA(200,+TDUZ,7),U,1)=1
+ ; Set termination date (field 9.2) to today
+ S FDA(200,TDUZ_",",9.2)=DT
  D FILE^DIE("","FDA","DIERR")
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
  D AUDITLOG^ZVEADMIN("USER-DEACT",+TDUZ,"Deactivated")
  S R(0)="1^OK" Q
  ;
-REACT(R,TDUZ) ; RPC ZVE USMG REACT — delete termination date
+REACT(R,TDUZ) ; RPC ZVE USMG REACT — reactivation
  I '+$G(TDUZ) S R(0)="0^DUZ required" Q
  I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
  N FDA,DIERR
- S FDA(200,TDUZ_",",9)="@"
+ ; Clear DISUSER flag — restores sign-on
+ S $P(^VA(200,+TDUZ,7),U,1)=""
+ ; Clear termination date (field 9.2)
+ S FDA(200,TDUZ_",",9.2)="@"
  D FILE^DIE("","FDA","DIERR")
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
  D AUDITLOG^ZVEADMIN("USER-REACT",+TDUZ,"Reactivated")
