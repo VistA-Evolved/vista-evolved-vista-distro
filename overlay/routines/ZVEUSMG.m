@@ -145,7 +145,7 @@ ADD(R,NM,AC,VC) ; RPC ZVE USMG ADD — minimal user creation
  D AUDITLOG^ZVEADMIN("USER-ADD",NEWDUZ,"Created user "_NM)
  S R(0)="1^"_NEWDUZ Q
  ;
-DEACT(R,TDUZ) ; RPC ZVE USMG DEACT — soft deactivation
+DEACT(R,TDUZ,REASON) ; RPC ZVE USMG DEACT — soft deactivation
  I '+$G(TDUZ) S R(0)="0^DUZ required" Q
  I '$D(^VA(200,+TDUZ,0)) S R(0)="0^User not found" Q
  N FDA,DIERR
@@ -153,9 +153,11 @@ DEACT(R,TDUZ) ; RPC ZVE USMG DEACT — soft deactivation
  S $P(^VA(200,+TDUZ,7),U,1)=1
  ; Set termination date (field 9.2) to today
  S FDA(200,TDUZ_",",9.2)=DT
+ ; C006: Write termination reason (field 9.4) if provided
+ I $G(REASON)]"" S FDA(200,TDUZ_",",9.4)=REASON
  D FILE^DIE("","FDA","DIERR")
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
- D AUDITLOG^ZVEADMIN("USER-DEACT",+TDUZ,"Deactivated")
+ D AUDITLOG^ZVEADMIN("USER-DEACT",+TDUZ,"Deactivated"_$S($G(REASON)]"":": "_REASON,1:""))
  S R(0)="1^OK" Q
  ;
 REACT(R,TDUZ) ; RPC ZVE USMG REACT — reactivation
