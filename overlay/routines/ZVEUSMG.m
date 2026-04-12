@@ -107,7 +107,9 @@ CRED(R,TDUZ,AC,VC) ; RPC ZVE USMG CRED
  N FDA,DIERR
  S FDA(200,TDUZ_",",2)=$$EN^XUSHSH(AC)
  S FDA(200,TDUZ_",",11)=$$EN^XUSHSH(VC)
- ; Force password change on first login — set verify code change date to yesterday
+ ; Force password change on first login — set verify code change date to past
+ ; S1.6: Use $$FMADD to compute yesterday in proper FileMan YYYMMDD format
+ ; (2000101 was year 3700; DT-based math ensures a valid past date)
  S FDA(200,TDUZ_",",11.2)=$$FMADD^XLFDT(DT,-1)
  D FILE^DIE("","FDA","DIERR")
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
@@ -142,7 +144,8 @@ ADD(R,NM,AC,VC) ; RPC ZVE USMG ADD — minimal user creation
  . N CFDA,CERR
  . I $G(AC)]"" S CFDA(200,NEWDUZ_",",2)=$$EN^XUSHSH(AC)
  . I $G(VC)]"" S CFDA(200,NEWDUZ_",",11)=$$EN^XUSHSH(VC)
- . ; Force password change on first login — set verify code change date to yesterday
+ . ; Force password change on first login
+ . ; S1.6: Use $$FMADD to compute yesterday in proper FileMan YYYMMDD format
  . S CFDA(200,NEWDUZ_",",11.2)=$$FMADD^XLFDT(DT,-1)
  . D FILE^DIE("","CFDA","CERR")
  D AUDITLOG^ZVEADMIN("USER-ADD",NEWDUZ,"Created user "_NM)
