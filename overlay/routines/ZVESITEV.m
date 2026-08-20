@@ -79,14 +79,17 @@ WSSET(R,DIVIEN,WORKSPACE,ENABLED) ;
  ;   Per-role: "id^name^description^keyCount"
  ; ============================================================
 CRLIST(R) ;
- N CNT,ID,NM,DESC,KCNT
+ N CNT,ID,NM,DESC,KCNT,KNAMES
  S CNT=0
  S ID="" F  S ID=$O(^XTMP("ZVECR",ID)) Q:ID=""  D
  . I ID=0 Q
  . S NM=$P($G(^XTMP("ZVECR",ID,0)),U,1)
  . S DESC=$P($G(^XTMP("ZVECR",ID,0)),U,2)
- . S KCNT=0 N K S K="" F  S K=$O(^XTMP("ZVECR",ID,"KEYS",K)) Q:K=""  S KCNT=KCNT+1
- . S CNT=CNT+1,R(CNT)=ID_U_NM_U_DESC_U_KCNT
+ . S KCNT=0,KNAMES="" N K S K="" F  S K=$O(^XTMP("ZVECR",ID,"KEYS",K)) Q:K=""  D
+ . . S KCNT=KCNT+1
+ . . N KN S KN=$G(^XTMP("ZVECR",ID,"KEYS",K))
+ . . I KN]"" S KNAMES=KNAMES_$S(KNAMES="":"",1:";")_KN
+ . S CNT=CNT+1,R(CNT)=ID_U_NM_U_DESC_U_KCNT_U_KNAMES
  ;
  S R(0)="1^"_CNT_"^OK"
  Q

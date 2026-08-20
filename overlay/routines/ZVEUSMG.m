@@ -18,6 +18,8 @@ INSTALL ; Register RPCs in File #8994 (idempotent)
  D REGONE("ZVE USMG UNLOCK","UNLOCK","ZVEUSMG","Release a locked-out account")
  D REGONE("ZVE USMG RENAME","RENAME","ZVEUSMG","Rename user (.01)")
  D REGONE("ZVE USMG CHKAC","CHKAC","ZVEUSMG","Check access code availability")
+ D REGONE("ZVE USMG VCCHECK","VCCHECK","ZVEUSMG","Check password against history")
+ D REGONE("ZVE USMG VCHIST","VCHIST","ZVEUSMG","Save current VC to history ring")
  W !,"=== ZVE USMG install complete ==="
  Q
  ;
@@ -161,6 +163,8 @@ DEACT(R,TDUZ,REASON) ; RPC ZVE USMG DEACT — soft deactivation
  D FILE^DIE("","FDA","DIERR")
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
  D AUDITLOG^ZVEADMIN("USER-DEACT",+TDUZ,"Deactivated"_$S($G(REASON)]"":": "_REASON,1:""))
+ ; S2C: Send MailMan deactivation bulletin to IRM mail group
+ D DEACTMSG(+TDUZ,$G(REASON))
  S R(0)="1^OK" Q
  ;
 REACT(R,TDUZ) ; RPC ZVE USMG REACT — reactivation
@@ -174,7 +178,15 @@ REACT(R,TDUZ) ; RPC ZVE USMG REACT — reactivation
  D FILE^DIE("","FDA","DIERR")
  I $D(DIERR) S R(0)="0^FILE^DIE error" Q
  D AUDITLOG^ZVEADMIN("USER-REACT",+TDUZ,"Reactivated")
- S R(0)="1^OK" Q
+ ;
+ ; Return remaining keys so the UI can show them
+ N KI,KNM,KLIST S KLIST=""
+ S KI=0 F  S KI=$O(^VA(200,+TDUZ,51,KI)) Q:'KI  D
+ . S KNM=$P($G(^VA(200,+TDUZ,51,KI,0)),U,1) Q:KNM=""
+ . S KLIST=KLIST_$S(KLIST]"":", ",1:"")_KNM
+ S R(0)="1^OK"
+ S R(1)="KEYS^"_KLIST
+ Q
  ;
 TERM(R,TDUZ) ; RPC ZVE USMG TERM — full account termination
  ; Sets DISUSER (#200 field 7) = 1, sets TERMINATION DATE (field 9.2),
@@ -298,4 +310,68 @@ CHKAC(R,AC) ; RPC ZVE USMG CHKAC — check access code availability
  S DUP=$O(^VA(200,"A",HASH,0))
  I +DUP>0 S R(0)="0^Access code already in use" Q
  S R(0)="1^Available"
+ Q
+ ;
+VCCHECK(R,TDUZ,NEWVC) ; RPC ZVE USMG VCCHECK — check new password against history
+ ; Returns 1^OK if new password is allowed, 0^reason if it matches recent history.
+ I '+$G(TDUZ) S R(0)="0^DUZ required" Q
+ I $G(NEWVC)="" S R(0)="0^Password required" Q
+ N NEWHASH S NEWHASH=$$EN^XUSHSH(NEWVC)
+ ;
+ ; Check last 3 stored hashes in ^ZVEX("VCHIST",DUZ,seq)
+ N SEQ,OLDHASH
+ F SEQ=1:1:3 D  Q:$G(R(0))]""
+ . S OLDHASH=$G(^ZVEX("VCHIST",+TDUZ,SEQ))
+ . I OLDHASH="" Q
+ . I NEWHASH=OLDHASH S R(0)="0^Cannot reuse your last 3 passwords"
+ ;
+ ; Also check current verify code in File 200 field 11
+ I $G(R(0))="" D
+ . N CURHASH S CURHASH=$P($G(^VA(200,+TDUZ,.1)),U,2)
+ . I CURHASH]"",NEWHASH=CURHASH S R(0)="0^New password must be different from current password"
+ ;
+ I $G(R(0))="" S R(0)="1^OK"
+ Q
+ ;
+VCHIST(R,TDUZ) ; RPC ZVE USMG VCHIST — save current VC hash to history before changing
+ ; Call this BEFORE setting new credentials. Rotates the 3-slot ring buffer.
+ I '+$G(TDUZ) S R(0)="0^DUZ required" Q
+ N CURHASH S CURHASH=$P($G(^VA(200,+TDUZ,.1)),U,2)
+ I CURHASH="" S R(0)="1^OK^No current hash to save" Q
+ ;
+ ; Shift: slot 3 = slot 2, slot 2 = slot 1, slot 1 = current
+ S ^ZVEX("VCHIST",+TDUZ,3)=$G(^ZVEX("VCHIST",+TDUZ,2))
+ S ^ZVEX("VCHIST",+TDUZ,2)=$G(^ZVEX("VCHIST",+TDUZ,1))
+ S ^ZVEX("VCHIST",+TDUZ,1)=CURHASH
+ ;
+ S R(0)="1^OK"
+ Q
+ ;
+DEACTMSG(TDUZ,REASON) ; Send MailMan bulletin for user deactivation
+ ; Notifies IRM mail group (from Kernel Site Params #8989.3 field 4.3)
+ ; when a user account is deactivated. VistA standard pattern: ^XMD.
+ N XMSUB,XMTEXT,XMY,XMDUZ,MSG
+ N USERNAME S USERNAME=$$GET1^DIQ(200,TDUZ_",",.01,"E")
+ I USERNAME="" S USERNAME="DUZ "_TDUZ
+ N ADMINNAME S ADMINNAME=$$GET1^DIQ(200,DUZ_",",.01,"E")
+ I ADMINNAME="" S ADMINNAME="DUZ "_DUZ
+ ;
+ S XMSUB="USER DEACTIVATED: "_USERNAME
+ S MSG(1)="User Account Deactivation Notice"
+ S MSG(2)="====================================="
+ S MSG(3)=" "
+ S MSG(4)="User:    "_USERNAME_" (DUZ "_TDUZ_")"
+ S MSG(5)="Action:  DEACTIVATED"
+ S MSG(6)="Date:    "_$$FMTE^XLFDT($$NOW^XLFDT,"5Z")
+ S MSG(7)="By:      "_ADMINNAME_" (DUZ "_DUZ_")"
+ I $G(REASON)]"" S MSG(8)="Reason:  "_REASON
+ S XMTEXT="MSG("
+ ;
+ ; Send to IRM MAIL GROUP from Kernel Site Parameters
+ N IRMGRP S IRMGRP=$P($G(^XTV(8989.3,1,4.3)),U,1)
+ I +IRMGRP>0 S XMY("G."_$$GET1^DIQ(3.8,IRMGRP_",",.01,"E"))=""
+ ; Also send to .5 (POSTMASTER) as fallback
+ S XMY(.5)=""
+ S XMDUZ=DUZ
+ D ^XMD
  Q
